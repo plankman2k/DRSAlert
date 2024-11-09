@@ -1,10 +1,12 @@
 using DRSAlert.API;
 using DRSAlert.API.Endpoints;
+using DRSAlert.API.Services;
 using DRSAlert.API.Utilities;
 using FluentValidation;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
 using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -32,12 +34,56 @@ builder.Services.AddOutputCache();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddHttpClient();
 
+builder.Services.AddTransient<IUsersService, UsersService>();
+
 builder.Services.AddAutoMapper(typeof(Program));
 
 builder.Services.AddValidatorsFromAssemblyContaining<Program>();
 
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(options =>
+{
+    options.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo 
+        { 
+            Title = "DRSAlert.API", 
+            Version = "v1",
+            Description = "This is the API to handle communication for the DRSAlert system",
+            Contact = new Microsoft.OpenApi.Models.OpenApiContact
+            {
+                Name = "Jason Plank",
+                Email = "plank.jason@outlook.com"
+            },
+            License = new Microsoft.OpenApi.Models.OpenApiLicense
+            {
+                Name = "MIT",
+                Url = new Uri("https://opensource.org/licenses/MIT")
+            }
+        });
+    
+    options.AddSecurityDefinition("Bearer", new Microsoft.OpenApi.Models.OpenApiSecurityScheme
+    {
+        Description = "JWT Authorization header using the Bearer scheme",
+        Name = "Authorization",
+        Scheme = "Bearer",
+        In = Microsoft.OpenApi.Models.ParameterLocation.Header,
+        Type = Microsoft.OpenApi.Models.SecuritySchemeType.ApiKey
+    });       
+    
+    options.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {   
+        {
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference
+                {
+                    Type = ReferenceType.SecurityScheme,
+                    Id = "Bearer"
+                }
+            },
+            new string[] {}
+        }
+    });
+});
 
 builder.Services.AddAuthentication().AddJwtBearer(options => 
     options.TokenValidationParameters = new TokenValidationParameters
@@ -50,7 +96,10 @@ builder.Services.AddAuthentication().AddJwtBearer(options =>
         //IssuerSigningKeys = KeysHandler.GetAllKeys(builder.Configuration)
         IssuerSigningKey = KeysHandler.GetKey(builder.Configuration).First()
     });
-builder.Services.AddAuthorization();
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("isadmin", policy => policy.RequireClaim("isadmin"));
+});
 
 // Configure Serilog
 Log.Logger = new LoggerConfiguration()
