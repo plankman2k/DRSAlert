@@ -1,6 +1,11 @@
+using DRSAlert.API;
+using Microsoft.EntityFrameworkCore;
 using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.AddDbContext<ApplicationDBContext>(options =>
+    options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 builder.Services.AddCors(options =>
 {
@@ -14,6 +19,9 @@ builder.Services.AddCors(options =>
 builder.Services.AddOutputCache();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddHttpClient();
+
+builder.Services.AddAuthentication().AddJwtBearer();
+builder.Services.AddAuthorization();
 
 // Configure Serilog
 Log.Logger = new LoggerConfiguration()
@@ -29,6 +37,8 @@ app.UseCors();
 app.UseOutputCache();
 app.UseSerilogRequestLogging();
 
-app.MapGet("/", () => "Hello World!");
+app.UseAuthorization();
+
+app.MapGet("/", () => "Hello World!").RequireAuthorization();
 
 await app.RunAsync();
