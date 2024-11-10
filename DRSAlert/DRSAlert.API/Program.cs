@@ -1,5 +1,6 @@
 using DRSAlert.API;
 using DRSAlert.API.Endpoints;
+using DRSAlert.API.Repositories;
 using DRSAlert.API.Services;
 using DRSAlert.API.Utilities;
 using FluentValidation;
@@ -85,6 +86,8 @@ builder.Services.AddSwaggerGen(options =>
     });
 });
 
+builder.Services.AddScoped<IDisasterRepository, DisasterRepository>();
+
 builder.Services.AddAuthentication().AddJwtBearer(options => 
     options.TokenValidationParameters = new TokenValidationParameters
     {
@@ -126,5 +129,6 @@ app.UseAuthorization();
 app.MapGet("/", () => "Hello World!").RequireAuthorization();
 
 app.MapGroup("/users").MapUsers();
+app.MapGroup("/disasters").MapDisasters();
 
 await app.RunAsync();

@@ -1,3 +1,4 @@
+using DRSAlert.API.Entities;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
@@ -21,4 +22,5 @@ public class ApplicationDBContext(DbContextOptions<ApplicationDBContext> options
     }
     
     // DbSets go here
+    public DbSet<Disaster> Disasters { get; set; }
 }
