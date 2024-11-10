@@ -9,6 +9,11 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Serilog;
+using RabbitMQ.Client;
+using RabbitMQ.Client.Events;
+using System.Text;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -130,5 +135,31 @@ app.MapGet("/", () => "Hello World!").RequireAuthorization();
 
 app.MapGroup("/users").MapUsers();
 app.MapGroup("/disasters").MapDisasters();
+
+// RabbitMQ Configuration
+var factory = new ConnectionFactory { HostName = "102.211.204.21", UserName = "queue_user", Password = "queue_password" };
+using var connection = await factory.CreateConnectionAsync();
+using var channel = await connection.CreateChannelAsync();
+
+await channel.QueueDeclareAsync(queue: "weather_disaster",
+    durable: false,
+    exclusive: false,
+    autoDelete: false,
+    arguments: null);
+
+var consumer = new AsyncEventingBasicConsumer(channel);
+consumer.ReceivedAsync += (model, ea) =>
+{
+    var body = ea.Body.ToArray();
+    var message = Encoding.UTF8.GetString(body);
+
+    // Handle message here - Insert to DB, use DisastersRepository.
+
+    return Task.CompletedTask;
+};
+
+await channel.BasicConsumeAsync(queue: "weather_disaster",
+    autoAck: true,
+    consumer: consumer);
 
 await app.RunAsync();
