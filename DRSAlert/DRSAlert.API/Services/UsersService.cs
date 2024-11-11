@@ -1,14 +1,15 @@
+using DRSAlert.API.Models;
 using Microsoft.AspNetCore.Identity;
 
 namespace DRSAlert.API.Services;
 
 public class UsersService(IHttpContextAccessor httpContextAccessor,
-    UserManager<IdentityUser> userManager) : IUsersService
+    UserManager<ApplicationUser> userManager) : IUsersService
 {
-    public async Task<IdentityUser?> GetUser()
+    public async Task<ApplicationUser> GetUser()
     {
         var emailClaim = httpContextAccessor.HttpContext!
-            .User.Claims.Where(x => x.Type == "email").FirstOrDefault();
+            .User.Claims.FirstOrDefault(x => x.Type == "email");
 
         if (emailClaim is null)
         {

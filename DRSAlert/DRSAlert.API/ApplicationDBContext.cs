@@ -1,11 +1,13 @@
-using DRSAlert.API.Entities;
+using DRSAlert.API.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using Disaster = DRSAlert.API.Entities.Disaster;
+using NewsFeed = DRSAlert.API.Entities.NewsFeed;
 
 namespace DRSAlert.API;
 
-public class ApplicationDBContext(DbContextOptions<ApplicationDBContext> options) : IdentityDbContext(options)
+public class ApplicationDBContext(DbContextOptions<ApplicationDBContext> options) : IdentityDbContext<ApplicationUser>(options)
 {
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
