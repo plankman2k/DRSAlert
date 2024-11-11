@@ -23,4 +23,5 @@ public class ApplicationDBContext(DbContextOptions<ApplicationDBContext> options
     
     // DbSets go here
     public DbSet<Disaster> Disasters { get; set; }
+    public DbSet<NewsFeed> NewsFeeds { get; set; }
 }

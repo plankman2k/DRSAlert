@@ -12,6 +12,8 @@ using Serilog;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using System.Text;
+using System.Text.Json;
+using DRSAlert.API.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
 
@@ -92,6 +94,7 @@ builder.Services.AddSwaggerGen(options =>
 });
 
 builder.Services.AddScoped<IDisasterRepository, DisasterRepository>();
+builder.Services.AddScoped<INewsFeedRepository, NewsFeedRepository>();
 
 builder.Services.AddAuthentication().AddJwtBearer(options => 
     options.TokenValidationParameters = new TokenValidationParameters
@@ -138,17 +141,17 @@ app.MapGroup("/disasters").MapDisasters();
 
 // RabbitMQ Configuration
 var factory = new ConnectionFactory { HostName = "102.211.204.21", UserName = "queue_user", Password = "queue_password" };
-using var connection = await factory.CreateConnectionAsync();
-using var channel = await connection.CreateChannelAsync();
+using var connection1 = await factory.CreateConnectionAsync();
+using var channel1 = await connection1.CreateChannelAsync();
 
-await channel.QueueDeclareAsync(queue: "weather_disaster",
+await channel1.QueueDeclareAsync(queue: "weather_disaster",
     durable: false,
     exclusive: false,
     autoDelete: false,
     arguments: null);
 
-var consumer = new AsyncEventingBasicConsumer(channel);
-consumer.ReceivedAsync += (model, ea) =>
+var consumer1 = new AsyncEventingBasicConsumer(channel1);
+consumer1.ReceivedAsync += (model, ea) =>
 {
     var body = ea.Body.ToArray();
     var message = Encoding.UTF8.GetString(body);
@@ -158,8 +161,54 @@ consumer.ReceivedAsync += (model, ea) =>
     return Task.CompletedTask;
 };
 
-await channel.BasicConsumeAsync(queue: "weather_disaster",
+await channel1.BasicConsumeAsync(queue: "weather_disaster",
     autoAck: true,
-    consumer: consumer);
+    consumer: consumer1);
+
+using var connection2 = await factory.CreateConnectionAsync();
+using var channel2 = await connection2.CreateChannelAsync();
+
+await channel2.QueueDeclareAsync(queue: "news",
+    durable: false,
+    exclusive: false,
+    autoDelete: false,
+    arguments: null);
+
+var consumer2 = new AsyncEventingBasicConsumer(channel2);
+consumer2.ReceivedAsync += async (model, ea) =>
+{
+    var body = ea.Body.ToArray();
+    var message = Encoding.UTF8.GetString(body);
+
+    // Deserialize message to a NewsFeed object
+    var newsFeed = JsonSerializer.Deserialize<NewsFeed>(message);
+
+    if (newsFeed is not null)
+    {
+        // create a new instance of NewsFeedRepository
+        var newsFeedRepository = app.Services.GetRequiredService<INewsFeedRepository>();
+
+        var newsFeedToInsert = new DRSAlert.API.Entities.NewsFeed
+        {
+            Author = newsFeed.author,
+            Title = newsFeed.title,
+            Description = newsFeed.description,
+            Url = newsFeed.url,
+            Source = newsFeed.source,
+            Image = newsFeed.image?.ToString(),
+            Category = newsFeed.category,
+            Language = newsFeed.language,
+            Country = newsFeed.country,
+            PublishedAt = Convert.ToDateTime(newsFeed.published_at)
+        };
+
+        // Insert the newsFeedToInsert object to the database
+        await newsFeedRepository.Create(newsFeedToInsert);
+    }
+};
+
+await channel2.BasicConsumeAsync(queue: "news",
+    autoAck: true,
+    consumer: consumer2);
 
 await app.RunAsync();

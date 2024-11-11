@@ -9,6 +9,8 @@ import schedule
 import time
 from datetime import datetime, timedelta
 from meteostat import Stations, Daily
+from sklearn.utils.validation import check_non_negative
+
 
 def fetch_data():
     # Fetch news from SA
@@ -135,7 +137,7 @@ def fetch_data():
     data = pd.DataFrame(filtered_articles)  # + twitter_data['data'])
     data = pd.concat([data, all_weather_data], ignore_index=True)
 
-    return data, cities
+    return data, cities, news_data
 
 def is_disaster(row):
     if row['temp'] > 25:   #40
@@ -215,11 +217,25 @@ def send_to_rabbitmq(predictions):
 
     connection.close()
 
+def send_news_to_rabbitmq(news_data):
+    credentials = pika.PlainCredentials('queue_user', 'queue_password')
+    connection = pika.BlockingConnection(pika.ConnectionParameters('102.211.204.21', credentials=credentials))
+    channel = connection.channel()
+    channel.queue_declare(queue='news')
+
+    for article in news_data['data']:
+        message=json.dumps(article)
+        channel.basic_publish(exchange='', routing_key='news', body=message)
+
+    connection.close()
+
+
 def job():
-    data, cities = fetch_data()
+    data, cities, news_data = fetch_data()
     predictions = analyze_data(data, cities)
     #print(f'Predictions: {predictions}')  # Debug print
     send_to_rabbitmq(predictions)
+    send_news_to_rabbitmq(news_data)
 
 schedule.every(2).minutes.do(job)
 

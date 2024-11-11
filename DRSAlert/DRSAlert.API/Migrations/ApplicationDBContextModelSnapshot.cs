@@ -45,6 +45,55 @@ namespace DRSAlert.API.Migrations
                     b.ToTable("Disasters");
                 });
 
+            modelBuilder.Entity("DRSAlert.API.Entities.NewsFeed", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Author")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Category")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Country")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Image")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Language")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTimeOffset>("PublishedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Source")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Url")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("NewsFeeds");
+                });
+
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
                 {
                     b.Property<string>("Id")
