@@ -138,6 +138,7 @@ app.MapGet("/", () => "Hello World!").RequireAuthorization();
 
 app.MapGroup("/users").MapUsers();
 app.MapGroup("/disasters").MapDisasters();
+app.MapGroup("/newsfeeds").MapNewsFeeds();
 
 // RabbitMQ Configuration
 var factory = new ConnectionFactory { HostName = "102.211.204.21", UserName = "queue_user", Password = "queue_password" };
