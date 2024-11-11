@@ -14,7 +14,7 @@ public class ApplicationDBContext(DbContextOptions<ApplicationDBContext> options
         base.OnModelCreating(modelBuilder);
         // Fluent API configurations go here
 
-        modelBuilder.Entity<IdentityUser>().ToTable("Users");
+        modelBuilder.Entity<ApplicationUser>().ToTable("Users");
         modelBuilder.Entity<IdentityRole>().ToTable("Roles");
         modelBuilder.Entity<IdentityRoleClaim<string>>().ToTable("RoleClaims");
         modelBuilder.Entity<IdentityUserClaim<string>>().ToTable("UserClaims");
