@@ -12,7 +12,7 @@ from meteostat import Stations, Daily
 
 def fetch_data():
     # Fetch news from SA
-    news_api_url = 'https://newsapi.org/v2/top-headlines?country=za&apiKey=217769cc2bee43fbb3854299ecb7ecfc'
+    news_api_url = 'http://api.mediastack.com/v1/news?access_key=5edb2ff2ee693bcdf2aa4aa1d462927d&country=za&categories=general&keywords=disaster'
     response_za = requests.get(news_api_url)
     news_data = response_za.json()
 
@@ -94,6 +94,14 @@ def fetch_data():
         {"name": "Worcester", "latitude": -33.6467, "longitude": 19.4481}
     ]
 
+    # Filter news articles to include only relevant weather disasters
+    relevant_keywords = ['flood', 'storm', 'hurricane', 'tornado', 'drought', 'heatwave', 'blizzard']
+    filtered_articles = [article for article in news_data['data'] if any(
+        keyword in article['title'].lower() or keyword in article['description'].lower() for keyword in
+        relevant_keywords) and any(
+        city['name'].lower() in article['title'].lower() or city['name'].lower() in article['description'].lower() for
+        city in cities)]
+
     # Set the time period
     #current_date = datetime.now().date()
     #start = datetime.combine(current_date - timedelta(days=5), datetime.min.time())
@@ -124,7 +132,7 @@ def fetch_data():
     all_weather_data.reset_index(inplace=True)
     print(all_weather_data.head())
 
-    data = pd.DataFrame(news_data['articles'])  # + twitter_data['data'])
+    data = pd.DataFrame(filtered_articles)  # + twitter_data['data'])
     data = pd.concat([data, all_weather_data], ignore_index=True)
 
     return data, cities
