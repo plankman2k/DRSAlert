@@ -105,12 +105,12 @@ def fetch_data():
         city in cities)]
 
     # Set the time period
-    #current_date = datetime.now().date()
-    #start = datetime.combine(current_date - timedelta(days=5), datetime.min.time())
-    #end = datetime.combine(current_date + timedelta(days=5), datetime.min.time())
+    current_date = datetime.now().date()
+    start = datetime.combine(current_date - timedelta(days=5), datetime.min.time())
+    end = datetime.combine(current_date + timedelta(days=5), datetime.min.time())
 
-    start = datetime(2024, 1, 1)
-    end = datetime(2024, 12, 31)
+    #start = datetime(2024, 1, 1)
+    #end = datetime(2024, 12, 31)
 
     # Create an empty DataFrame to store the data
     all_weather_data = pd.DataFrame()
@@ -237,7 +237,7 @@ def job():
     send_to_rabbitmq(predictions)
     send_news_to_rabbitmq(news_data)
 
-schedule.every(2).minutes.do(job)
+schedule.every(10).minutes.do(job)
 
 while True:
     schedule.run_pending()

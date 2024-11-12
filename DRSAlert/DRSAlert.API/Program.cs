@@ -43,6 +43,8 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.AddHttpClient();
 
 builder.Services.AddTransient<IUsersService, UsersService>();
+builder.Services.AddScoped<IDisasterRepository, DisasterRepository>();
+builder.Services.AddScoped<INewsFeedRepository, NewsFeedRepository>();
 
 builder.Services.AddAutoMapper(typeof(Program));
 
@@ -92,9 +94,6 @@ builder.Services.AddSwaggerGen(options =>
         }
     });
 });
-
-builder.Services.AddScoped<IDisasterRepository, DisasterRepository>();
-builder.Services.AddScoped<INewsFeedRepository, NewsFeedRepository>();
 
 builder.Services.AddAuthentication().AddJwtBearer(options => 
     options.TokenValidationParameters = new TokenValidationParameters
@@ -152,14 +151,36 @@ await channel1.QueueDeclareAsync(queue: "weather_disaster",
     arguments: null);
 
 var consumer1 = new AsyncEventingBasicConsumer(channel1);
-consumer1.ReceivedAsync += (model, ea) =>
+consumer1.ReceivedAsync += async (model, ea) =>
 {
     var body = ea.Body.ToArray();
     var message = Encoding.UTF8.GetString(body);
 
     // Handle message here - Insert to DB, use DisastersRepository.
+    var disaster = JsonSerializer.Deserialize<Disaster>(message);
 
-    return Task.CompletedTask;
+    if (disaster is not null)
+    {
+        Log.Information("Storing disaster info: {Disaster}", disaster.city);
+        using (var scope = app.Services.CreateScope())
+        {
+            // create a new instace if DisasterRepository
+            var disasterRepository = scope.ServiceProvider.GetRequiredService<IDisasterRepository>();
+        
+            var disasterToInsert = new DRSAlert.API.Entities.Disaster
+            {
+                City = disaster.city,
+                Latitude = disaster.latitude,
+                Longitude = disaster.longitude,
+                DisasterType = disaster.disaster_field,
+                DisasterValue = disaster.disaster_value
+            };
+        
+            // Insert the disasterToInser object to the database
+            await disasterRepository.Create(disasterToInsert);
+        }
+        
+    }
 };
 
 await channel1.BasicConsumeAsync(queue: "weather_disaster",
@@ -186,25 +207,30 @@ consumer2.ReceivedAsync += async (model, ea) =>
 
     if (newsFeed is not null)
     {
-        // create a new instance of NewsFeedRepository
-        var newsFeedRepository = app.Services.GetRequiredService<INewsFeedRepository>();
-
-        var newsFeedToInsert = new DRSAlert.API.Entities.NewsFeed
+        using (var scope = app.Services.CreateScope())
         {
-            Author = newsFeed.author,
-            Title = newsFeed.title,
-            Description = newsFeed.description,
-            Url = newsFeed.url,
-            Source = newsFeed.source,
-            Image = newsFeed.image?.ToString(),
-            Category = newsFeed.category,
-            Language = newsFeed.language,
-            Country = newsFeed.country,
-            PublishedAt = Convert.ToDateTime(newsFeed.published_at)
-        };
+            Log.Information("Storing article info: {NewsFeed}", newsFeed.title);
+            
+            // create a new instance of NewsFeedRepository
+            var newsFeedRepository = scope.ServiceProvider.GetRequiredService<INewsFeedRepository>();
 
-        // Insert the newsFeedToInsert object to the database
-        await newsFeedRepository.Create(newsFeedToInsert);
+            var newsFeedToInsert = new DRSAlert.API.Entities.NewsFeed
+            {
+                Author = newsFeed.author,
+                Title = newsFeed.title,
+                Description = newsFeed.description,
+                Url = newsFeed.url,
+                Source = newsFeed.source,
+                Image = newsFeed.image?.ToString(),
+                Category = newsFeed.category,
+                Language = newsFeed.language,
+                Country = newsFeed.country,
+                PublishedAt = Convert.ToDateTime(newsFeed.published_at)
+            };
+
+            // Insert the newsFeedToInsert object to the database
+            await newsFeedRepository.Create(newsFeedToInsert);
+        }
     }
 };
 

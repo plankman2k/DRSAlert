@@ -12,5 +12,5 @@ public class NewsFeed
     public string Category { get; set; } = null!;
     public string Language { get; set; } = null!;
     public string Country { get; set; } = null!;
-    public DateTimeOffset PublishedAt { get; set; }
+    public DateTime PublishedAt { get; set; }
 }

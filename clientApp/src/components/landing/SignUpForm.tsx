@@ -9,7 +9,9 @@ import { useState } from "react";
 export default function SignUpForm() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [location, setLocation] = useState("");
+  const [errorMessages, setErrorMessages] = useState<string[]>([]);
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -18,7 +20,7 @@ export default function SignUpForm() {
       headers: {
         "Content-Type": "application/json"
       },
-      body: JSON.stringify({ name, email, location })
+      body: JSON.stringify({ name, email, password, location })
     });
     if (response.ok) {
       const data = await response.json();
@@ -26,6 +28,9 @@ export default function SignUpForm() {
       localStorage.setItem("jwtTokenExpiration", data.expiration);
       console.log("Sign up was successful");
     } else {
+      const errorData = await response.json();
+      const errors = Object.values(errorData.errors).flat();
+      setErrorMessages(errors);
       console.log("Sign up failed");
     }
   };
@@ -58,6 +63,17 @@ export default function SignUpForm() {
                 />
               </div>
               <div>
+                <Label htmlFor="password" className="text-yellow-300">Password</Label>
+                <Input
+                    id="password"
+                    type="password"
+                    placeholder="Enter your password"
+                    className="bg-gray-700 text-white border-gray-600"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                />
+              </div>
+              <div>
                 <Label htmlFor="location" className="text-yellow-300">Location</Label>
                 <Input
                     id="location"
@@ -67,6 +83,13 @@ export default function SignUpForm() {
                     onChange={(e) => setLocation(e.target.value)}
                 />
               </div>
+              {errorMessages.length > 0 && (
+                  <div className="text-red-500">
+                    {errorMessages.map((msg, index) => (
+                        <div key={index}>{msg}</div>
+                    ))}
+                  </div>
+              )}
               <Button type="submit" className="w-full bg-red-600 hover:bg-red-700 text-white">
                 Sign Up for Alerts
               </Button>
