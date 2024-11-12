@@ -147,7 +147,7 @@ void ConfigureMiddleware(WebApplication app)
         app.UseSwaggerUI(c =>
         {
             c.SwaggerEndpoint("/swagger/v1/swagger.json", "DRSAlert.API v1");
-            c.RoutePrefix = string.Empty; // Set Swagger UI at the app's root
+            c.RoutePrefix = "swagger"; // Set Swagger UI at the app's root
         });
     }
 
