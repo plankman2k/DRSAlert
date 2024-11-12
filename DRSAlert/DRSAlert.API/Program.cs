@@ -14,8 +14,6 @@ using RabbitMQ.Client.Events;
 using System.Text;
 using System.Text.Json;
 using DRSAlert.API.Models;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore.Metadata.Internal;
 
 var builder = WebApplication.CreateBuilder(args);
 
