@@ -6,8 +6,8 @@ public class KeysHandler
 {
     public const string OurIssuer = "DRSAlert.API";
     private const string KeysSection = "Authentication:Schemes:Bearer:SigningKeys";
-    private const string KeysSection_Issuer = "Issuer";
-    private const string KeysSection_Value = "Value";
+    private const string KeysSectionIssuer = "Issuer";
+    private const string KeysSectionValue = "Value";
     
     public static IEnumerable<SecurityKey> GetKey(IConfiguration configuration)
         => GetKey(configuration, OurIssuer);
@@ -16,9 +16,9 @@ public class KeysHandler
     {
         var signingKey = configuration.GetSection(KeysSection)
             .GetChildren()
-            .SingleOrDefault(key => key[KeysSection_Issuer] == issuer);
+            .SingleOrDefault(key => key[KeysSectionIssuer] == issuer);
         
-        if (signingKey is not null && signingKey[KeysSection_Value] is string secretKey)
+        if (signingKey is not null && signingKey[KeysSectionValue] is string secretKey)
         {
             yield return new SymmetricSecurityKey(Convert.FromBase64String(secretKey));
         }
@@ -31,7 +31,7 @@ public class KeysHandler
         
         foreach (var signingKey in signingKeys)
         {
-            if (signingKey[KeysSection_Value] is string secretKey)
+            if (signingKey[KeysSectionValue] is string secretKey)
             {
                 yield return new SymmetricSecurityKey(Convert.FromBase64String(secretKey));
             }
