@@ -39,7 +39,8 @@ public static class UsersEndpoint
         {
             UserName = userCredentialsDTO.Email,
             Email = userCredentialsDTO.Email,
-            Location = userCredentialsDTO.Location
+            Location = userCredentialsDTO.Location,
+            Name = userCredentialsDTO.Name
         };
 
         var result = await userManager.CreateAsync(user, userCredentialsDTO.Password);
