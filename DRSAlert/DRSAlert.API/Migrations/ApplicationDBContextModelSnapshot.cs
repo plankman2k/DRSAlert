@@ -15,7 +15,7 @@ namespace DRSAlert.API.Migrations
         protected override void BuildModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
-            modelBuilder.HasAnnotation("ProductVersion", "8.0.10");
+            modelBuilder.HasAnnotation("ProductVersion", "8.0.11");
 
             modelBuilder.Entity("DRSAlert.API.Entities.Disaster", b =>
                 {
@@ -74,7 +74,7 @@ namespace DRSAlert.API.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT");
 
-                    b.Property<DateTimeOffset>("PublishedAt")
+                    b.Property<DateTime>("PublishedAt")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Source")

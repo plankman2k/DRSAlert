@@ -13,7 +13,5 @@ public class UserCredentialsDTOValidator : AbstractValidator<UserCredentialsDTO>
 
         RuleFor(x => x.Password).NotEmpty().WithMessage("Password cannot be empty");
         
-        RuleFor(x => x.Location).NotEmpty().WithMessage("Location cannot be empty")
-            .MaximumLength(256).WithMessage("Maximum length for location is 256 characters");
     }
 }

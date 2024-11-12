@@ -83,7 +83,6 @@ export default function Home() {
         </section>
 
         <section id="sign-up" className="mb-12">
-          <h2 className="text-3xl font-bold text-yellow-300 mb-6">Sign Up for Emergency Alerts</h2>
           <SignUpForm />
         </section>
       </main>

@@ -12,7 +12,7 @@ public class AutoMapperProfiles : Profile
         CreateMap<Disaster, DisasterDTO>();
         CreateMap<CreateDisasterDTO, Disaster>();
         
-        CreateMap<NewsFeed, NewsFeedDTO>();
-        CreateMap<CreateNewsFeedDTO, NewsFeed>();
+        CreateMap<DRSAlert.API.Entities.NewsFeed, NewsFeedDTO>();
+        CreateMap<CreateNewsFeedDTO, DRSAlert.API.Entities.NewsFeed>();
     }
 }

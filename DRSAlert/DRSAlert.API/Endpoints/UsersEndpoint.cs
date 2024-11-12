@@ -59,7 +59,7 @@ public static class UsersEndpoint
     
     static async Task<Results<Ok<AuthenticationResponseDTO>, BadRequest<string>>> Login(
         UserCredentialsDTO userCredentialsDTO, 
-        [FromServices] SignInManager<IdentityUser> signInManager,
+        [FromServices] SignInManager<ApplicationUser> signInManager,
         [FromServices] UserManager<ApplicationUser> userManager,
         IConfiguration configuration)
     {
