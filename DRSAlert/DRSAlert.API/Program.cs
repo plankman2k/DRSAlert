@@ -14,202 +14,224 @@ using RabbitMQ.Client.Events;
 using System.Text;
 using System.Text.Json;
 using DRSAlert.API.Models;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore.Metadata.Internal;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddDbContext<ApplicationDBContext>(options =>
-    options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
+ConfigureServices(builder);
+ConfigureSerilog(builder);
 
-builder.Services.AddIdentityCore<ApplicationUser>()
-    .AddEntityFrameworkStores<ApplicationDBContext>()
-    .AddDefaultTokenProviders();
+var app = builder.Build();
 
-builder.Services.AddScoped<UserManager<ApplicationUser>>();
-builder.Services.AddScoped<SignInManager<ApplicationUser>>();
+ConfigureMiddleware(app);
+await ConfigureRabbitMQ(app);
 
-builder.Services.AddCors(options =>
+await app.RunAsync();
+
+void ConfigureServices(WebApplicationBuilder builder)
 {
-    options.AddDefaultPolicy(configuraton =>
+    builder.Services.AddDbContext<ApplicationDBContext>(options =>
+        options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+    builder.Services.AddIdentityCore<ApplicationUser>()
+        .AddEntityFrameworkStores<ApplicationDBContext>()
+        .AddDefaultTokenProviders();
+
+    builder.Services.AddScoped<UserManager<ApplicationUser>>();
+    builder.Services.AddScoped<SignInManager<ApplicationUser>>();
+
+    builder.Services.AddCors(options =>
     {
-        configuraton.WithOrigins(builder.Configuration["allowedOrigins"]!).AllowAnyMethod()
-            .AllowAnyHeader();
+        options.AddDefaultPolicy(configuraton =>
+        {
+            configuraton.WithOrigins(builder.Configuration["allowedOrigins"]!).AllowAnyMethod()
+                .AllowAnyHeader();
+        });
     });
-});
 
-builder.Services.AddOutputCache();
-builder.Services.AddHttpContextAccessor();
-builder.Services.AddHttpClient();
+    builder.Services.AddOutputCache();
+    builder.Services.AddHttpContextAccessor();
+    builder.Services.AddHttpClient();
 
-builder.Services.AddTransient<IUsersService, UsersService>();
+    builder.Services.AddTransient<IUsersService, UsersService>();
 
-builder.Services.AddAutoMapper(typeof(Program));
+    builder.Services.AddAutoMapper(typeof(Program));
 
-builder.Services.AddValidatorsFromAssemblyContaining<Program>();
+    builder.Services.AddValidatorsFromAssemblyContaining<Program>();
 
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen(options =>
-{
-    options.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo 
-        { 
-            Title = "DRSAlert.API", 
+    builder.Services.AddEndpointsApiExplorer();
+    builder.Services.AddSwaggerGen(options =>
+    {
+        options.SwaggerDoc("v1", new OpenApiInfo
+        {
+            Title = "DRSAlert.API",
             Version = "v1",
             Description = "This is the API to handle communication for the DRSAlert system",
-            Contact = new Microsoft.OpenApi.Models.OpenApiContact
+            Contact = new OpenApiContact
             {
                 Name = "Jason Plank",
                 Email = "plank.jason@outlook.com"
             },
-            License = new Microsoft.OpenApi.Models.OpenApiLicense
+            License = new OpenApiLicense
             {
                 Name = "MIT",
                 Url = new Uri("https://opensource.org/licenses/MIT")
             }
         });
-    
-    options.AddSecurityDefinition("Bearer", new Microsoft.OpenApi.Models.OpenApiSecurityScheme
-    {
-        Description = "JWT Authorization header using the Bearer scheme",
-        Name = "Authorization",
-        Scheme = "Bearer",
-        In = Microsoft.OpenApi.Models.ParameterLocation.Header,
-        Type = Microsoft.OpenApi.Models.SecuritySchemeType.ApiKey
-    });       
-    
-    options.AddSecurityRequirement(new OpenApiSecurityRequirement
-    {   
+
+        options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
         {
-            new OpenApiSecurityScheme
+            Description = "JWT Authorization header using the Bearer scheme",
+            Name = "Authorization",
+            Scheme = "Bearer",
+            In = ParameterLocation.Header,
+            Type = SecuritySchemeType.ApiKey
+        });
+
+        options.AddSecurityRequirement(new OpenApiSecurityRequirement
+        {
             {
-                Reference = new OpenApiReference
+                new OpenApiSecurityScheme
                 {
-                    Type = ReferenceType.SecurityScheme,
-                    Id = "Bearer"
-                }
-            },
-            new string[] {}
-        }
+                    Reference = new OpenApiReference
+                    {
+                        Type = ReferenceType.SecurityScheme,
+                        Id = "Bearer"
+                    }
+                },
+                new string[] {}
+            }
+        });
     });
-});
 
-builder.Services.AddScoped<IDisasterRepository, DisasterRepository>();
-builder.Services.AddScoped<INewsFeedRepository, NewsFeedRepository>();
+    builder.Services.AddScoped<IDisasterRepository, DisasterRepository>();
+    builder.Services.AddScoped<INewsFeedRepository, NewsFeedRepository>();
 
-builder.Services.AddAuthentication().AddJwtBearer(options => 
-    options.TokenValidationParameters = new TokenValidationParameters
+    // var signingKey = ;
+    // var securityKeys = signingKey.ToList();
+    // if (!securityKeys.Any())
+    // {
+    //     throw new InvalidOperationException("No signing key found");
+    // }
+
+    builder.Services.AddAuthentication().AddJwtBearer(options =>
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = false,
+            ValidateAudience = false,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            ClockSkew = TimeSpan.Zero,
+            IssuerSigningKey = KeysHandler.GetKey(builder.Configuration).First()
+        });
+    builder.Services.AddAuthorization(options =>
     {
-        ValidateIssuer = false,
-        ValidateAudience = false,
-        ValidateLifetime = true,
-        ValidateIssuerSigningKey = true,
-        ClockSkew = TimeSpan.Zero,
-        //IssuerSigningKeys = KeysHandler.GetAllKeys(builder.Configuration)
-        IssuerSigningKey = KeysHandler.GetKey(builder.Configuration).First()
+        options.AddPolicy("isadmin", policy => policy.RequireClaim("isadmin"));
     });
-builder.Services.AddAuthorization(options =>
-{
-    options.AddPolicy("isadmin", policy => policy.RequireClaim("isadmin"));
-});
-
-// Configure Serilog
-Log.Logger = new LoggerConfiguration()
-    .ReadFrom.Configuration(builder.Configuration)
-    .Enrich.FromLogContext()
-    .CreateLogger();
-
-builder.Host.UseSerilog();
-
-var app = builder.Build();
-
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
 }
 
-app.UseCors();
-app.UseOutputCache();
-app.UseSerilogRequestLogging();
-
-app.UseAuthorization();
-
-app.MapGet("/", () => "Hello World!").RequireAuthorization();
-
-app.MapGroup("/users").MapUsers();
-app.MapGroup("/disasters").MapDisasters();
-app.MapGroup("/newsfeeds").MapNewsFeeds();
-
-// RabbitMQ Configuration
-var factory = new ConnectionFactory { HostName = "102.211.204.21", UserName = "queue_user", Password = "queue_password" };
-using var connection1 = await factory.CreateConnectionAsync();
-using var channel1 = await connection1.CreateChannelAsync();
-
-await channel1.QueueDeclareAsync(queue: "weather_disaster",
-    durable: false,
-    exclusive: false,
-    autoDelete: false,
-    arguments: null);
-
-var consumer1 = new AsyncEventingBasicConsumer(channel1);
-consumer1.ReceivedAsync += (model, ea) =>
+void ConfigureSerilog(WebApplicationBuilder builder)
 {
-    var body = ea.Body.ToArray();
-    var message = Encoding.UTF8.GetString(body);
+    Log.Logger = new LoggerConfiguration()
+        .ReadFrom.Configuration(builder.Configuration)
+        .Enrich.FromLogContext()
+        .CreateLogger();
 
-    // Handle message here - Insert to DB, use DisastersRepository.
+    builder.Host.UseSerilog();
+}
 
-    return Task.CompletedTask;
-};
-
-await channel1.BasicConsumeAsync(queue: "weather_disaster",
-    autoAck: true,
-    consumer: consumer1);
-
-using var connection2 = await factory.CreateConnectionAsync();
-using var channel2 = await connection2.CreateChannelAsync();
-
-await channel2.QueueDeclareAsync(queue: "news",
-    durable: false,
-    exclusive: false,
-    autoDelete: false,
-    arguments: null);
-
-var consumer2 = new AsyncEventingBasicConsumer(channel2);
-consumer2.ReceivedAsync += async (model, ea) =>
+void ConfigureMiddleware(WebApplication app)
 {
-    var body = ea.Body.ToArray();
-    var message = Encoding.UTF8.GetString(body);
-
-    // Deserialize message to a NewsFeed object
-    var newsFeed = JsonSerializer.Deserialize<NewsFeed>(message);
-
-    if (newsFeed is not null)
+    if (app.Environment.IsDevelopment())
     {
-        // create a new instance of NewsFeedRepository
-        var newsFeedRepository = app.Services.GetRequiredService<INewsFeedRepository>();
-
-        var newsFeedToInsert = new DRSAlert.API.Entities.NewsFeed
+        app.UseSwagger();
+        app.UseSwaggerUI(c =>
         {
-            Author = newsFeed.author,
-            Title = newsFeed.title,
-            Description = newsFeed.description,
-            Url = newsFeed.url,
-            Source = newsFeed.source,
-            Image = newsFeed.image?.ToString(),
-            Category = newsFeed.category,
-            Language = newsFeed.language,
-            Country = newsFeed.country,
-            PublishedAt = Convert.ToDateTime(newsFeed.published_at)
-        };
-
-        // Insert the newsFeedToInsert object to the database
-        await newsFeedRepository.Create(newsFeedToInsert);
+            c.SwaggerEndpoint("/swagger/v1/swagger.json", "DRSAlert.API v1");
+            c.RoutePrefix = string.Empty; // Set Swagger UI at the app's root
+        });
     }
-};
 
-await channel2.BasicConsumeAsync(queue: "news",
-    autoAck: true,
-    consumer: consumer2);
+    app.UseCors();
+    app.UseOutputCache();
+    app.UseSerilogRequestLogging();
+    app.UseAuthorization();
 
-await app.RunAsync();
+    app.MapGroup("/users").MapUsers();
+    app.MapGroup("/disasters").MapDisasters();
+    app.MapGroup("/newsfeeds").MapNewsFeeds();
+}
+
+async Task ConfigureRabbitMQ(WebApplication app)
+{
+    var factory = new ConnectionFactory { HostName = "102.211.204.21", UserName = "queue_user", Password = "queue_password" };
+
+    await using var connection1 = await factory.CreateConnectionAsync();
+    await using var channel1 = await connection1.CreateChannelAsync();
+
+    await channel1.QueueDeclareAsync(queue: "weather_disaster",
+        durable: false,
+        exclusive: false,
+        autoDelete: false,
+        arguments: null);
+
+    var consumer1 = new AsyncEventingBasicConsumer(channel1);
+    consumer1.ReceivedAsync += (model, ea) =>
+    {
+        var body = ea.Body.ToArray();
+        var message = Encoding.UTF8.GetString(body);
+
+        // Handle message here - Insert to DB, use DisastersRepository.
+
+        return Task.CompletedTask;
+    };
+
+    await channel1.BasicConsumeAsync(queue: "weather_disaster",
+        autoAck: true,
+        consumer: consumer1);
+
+    using var connection2 = await factory.CreateConnectionAsync();
+    using var channel2 = await connection2.CreateChannelAsync();
+
+    await channel2.QueueDeclareAsync(queue: "news",
+        durable: false,
+        exclusive: false,
+        autoDelete: false,
+        arguments: null);
+
+    var consumer2 = new AsyncEventingBasicConsumer(channel2);
+    consumer2.ReceivedAsync += async (model, ea) =>
+    {
+        var body = ea.Body.ToArray();
+        var message = Encoding.UTF8.GetString(body);
+
+        // Deserialize message to a NewsFeed object
+        var newsFeed = JsonSerializer.Deserialize<NewsFeed>(message);
+
+        if (newsFeed is not null)
+        {
+            // create a new instance of NewsFeedRepository
+            var newsFeedRepository = app.Services.GetRequiredService<INewsFeedRepository>();
+
+            var newsFeedToInsert = new DRSAlert.API.Entities.NewsFeed
+            {
+                Author = newsFeed.author,
+                Title = newsFeed.title,
+                Description = newsFeed.description,
+                Url = newsFeed.url,
+                Source = newsFeed.source,
+                Image = newsFeed.image?.ToString(),
+                Category = newsFeed.category,
+                Language = newsFeed.language,
+                Country = newsFeed.country,
+                PublishedAt = Convert.ToDateTime(newsFeed.published_at)
+            };
+
+            // Insert the newsFeedToInsert object to the database
+            await newsFeedRepository.Create(newsFeedToInsert);
+        }
+    };
+
+    await channel2.BasicConsumeAsync(queue: "news",
+        autoAck: true,
+        consumer: consumer2);
+}
