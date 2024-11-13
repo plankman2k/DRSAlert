@@ -48,7 +48,14 @@ const OpenStreetMap = () => {
                 console.error('Error fetching disaster data:', error);
             }
         };
-        fetchDisasterData();
+
+        const isFirstLoad = sessionStorage.getItem('isFirstLoad');
+        if (!isFirstLoad) {
+            sessionStorage.setItem('isFirstLoad', 'true');
+            window.location.reload();
+        } else {
+            fetchDisasterData();
+        }
     }, []);
 
     if (typeof window === 'undefined') return null;

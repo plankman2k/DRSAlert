@@ -11,8 +11,9 @@ public static class NewsFeedEndpoints
     public static RouteGroupBuilder MapNewsFeeds(this RouteGroupBuilder group)
     {
         group.MapGet("/", GetNewsFeeds)
-            .CacheOutput(c => c.Expire(TimeSpan.FromMinutes(5)).Tag("newsfeeds-get"));
-        group.MapGet("/{id:int}", GetById);
+            .CacheOutput(c => c.Expire(TimeSpan.FromMinutes(5)).Tag("newsfeeds-get"))
+            .RequireAuthorization();
+        group.MapGet("/{id:int}", GetById).RequireAuthorization();
         return group;
     }
     
