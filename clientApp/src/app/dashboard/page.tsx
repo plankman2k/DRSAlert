@@ -4,8 +4,8 @@ import { useState, useEffect } from 'react'
 import { Button } from "../../components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../components/ui/tabs"
-//import OpenStreetMap from "../../components/dashboard/OpenStreetMap";
-import dynamic from 'next/dynamic'
+import OpenStreetMap from "../../components/dashboard/OpenStreetMap";
+import NewsFeedComponent from '../../components/dashboard/NewsFeedComponent';
 import { 
   AlertTriangle, 
   BarChart, 
@@ -21,10 +21,6 @@ import {
   Clock 
 } from "lucide-react"
 import Link from 'next/link'
-
-const OpenStreetMap = dynamic(() => import('../../components/dashboard/OpenStreetMap'), {
-  ssr: false,
-})
 
 export default function DashboardPage() {
   const [alerts, setAlerts] = useState([])
@@ -130,7 +126,7 @@ export default function DashboardPage() {
         </TabsList>
 
         <TabsContent value="map" className="bg-gray-800 p-4">
-          <OpenStreetMap />
+          {/*<OpenStreetMap />*/}
         </TabsContent>
 
         <TabsContent value="weather" className="bg-gray-800 p-4">
@@ -146,6 +142,10 @@ export default function DashboardPage() {
               </Card>
             ))}
           </div>
+        </TabsContent>
+
+        <TabsContent value="resources" className="space-y-4">
+          <NewsFeedComponent />
         </TabsContent>
 
         <TabsContent value="alerts" className="space-y-4">
