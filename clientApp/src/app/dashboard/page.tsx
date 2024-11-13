@@ -126,7 +126,7 @@ export default function DashboardPage() {
         </TabsList>
 
         <TabsContent value="map" className="bg-gray-800 p-4">
-          {/*<OpenStreetMap />*/}
+          <OpenStreetMap />
         </TabsContent>
 
         <TabsContent value="weather" className="bg-gray-800 p-4">

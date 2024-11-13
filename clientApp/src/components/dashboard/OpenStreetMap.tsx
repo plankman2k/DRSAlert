@@ -1,5 +1,8 @@
+'use client';
+
 import React, { useEffect, useState } from 'react';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
 interface DisasterData {
@@ -13,16 +16,25 @@ interface DisasterData {
 
 const OpenStreetMap = () => {
     const [disasterData, setDisasterData] = useState<DisasterData[]>([]);
-    const [mapInitialized, setMapInitialized] = useState(false);
     const southAfricaCoordinates: [number, number] = [-30.5595, 22.9375];
-
+    
     useEffect(() => {
+        // Fix marker icons
+        delete (L.Icon.Default.prototype as any)._getIconUrl;
+        L.Icon.Default.mergeOptions({
+            iconRetinaUrl: '/leaflet/marker-icon-2x.png',
+            iconUrl: '/leaflet/marker-icon.png',
+            shadowUrl: '/leaflet/marker-shadow.png',
+        });
+        
         const fetchDisasterData = async () => {
             try {
                 const response = await fetch('https://localhost:7155/disasters');
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
                 const data: DisasterData[] = await response.json();
                 setDisasterData(data);
-                setMapInitialized(true);
             } catch (error) {
                 console.error('Error fetching disaster data:', error);
             }
@@ -30,25 +42,35 @@ const OpenStreetMap = () => {
         fetchDisasterData();
     }, []);
 
-    if (!mapInitialized) {
-        return null;
-    }
+    if (typeof window === 'undefined') return null;
 
     return (
-        <MapContainer center={southAfricaCoordinates} zoom={9} style={{ height: '100%', width: '100%' }}>
-            <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" attribution='&copy; OpenStreetMap contributors' />
-            {disasterData.map((disaster) => (
-                <Marker key={disaster.id} position={[disaster.latitude, disaster.longitude]}>
-                    <Popup>
-                        <div>
-                            <h3>{disaster.city}</h3>
-                            <p>Type: {disaster.disasterType}</p>
-                            <p>Value: {disaster.disasterValue}</p>
-                        </div>
-                    </Popup>
-                </Marker>
-            ))}
-        </MapContainer>
+        <div className="h-[600px] w-full relative">
+            <MapContainer 
+                center={southAfricaCoordinates} 
+                zoom={6} 
+                className="h-full w-full absolute"
+            >
+                <TileLayer 
+                    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" 
+                    attribution='&copy; OpenStreetMap contributors' 
+                />
+                {disasterData.map((disaster) => (
+                    <Marker
+                        key={disaster.id}
+                        position={[disaster.latitude, disaster.longitude]}
+                    >
+                        <Popup>
+                            <div>
+                                <h3>{disaster.city}</h3>
+                                <p>Type: {disaster.disasterType}</p>
+                                <p>Severity: {disaster.disasterValue}</p>
+                            </div>
+                        </Popup>
+                    </Marker>
+                ))}
+            </MapContainer>
+        </div>
     );
 };
 
