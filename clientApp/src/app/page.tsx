@@ -1,128 +1,176 @@
 'use client'
 
-import { useState, useEffect } from 'react';
-import { Button } from "../components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card"
-import { Input } from "../components/ui/input"
-import { Label } from "../components/ui/label"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs"
-import { AlertTriangle, Book, CloudRain, Flame, Info, MapPin, Siren, Thermometer, Wind } from "lucide-react"
+
+import {Button} from "../components/ui/button"
+import {Card, CardContent, CardHeader, CardTitle} from "../components/ui/card"
+import {
+    AlertTriangle,
+    Book,
+    CloudRain,
+    Flame,
+    Info,
+    LogIn,
+    LogOut,
+    MapPin,
+    Siren,
+    Thermometer,
+    Wind,
+} from "lucide-react"
 import Link from "next/link"
 import SignUpForm from '../components/landing/SignUpForm'
-import { getAuthStatus } from "../utils/auth"
-import {handleClientScriptLoad} from "next/script";
+import {useAuth} from "../context/AuthContext";
+
 
 export default function Home() {
-  const [isAuthenicated, setIsAuthenticated] = useState(false);
+    const {isAuthenticated, login, logout} = useAuth();
 
-  useEffect(() => {
-    const { isAuthenticated } = getAuthStatus();
-    setIsAuthenticated(isAuthenticated);
-  }, []);
 
-  const handleAuthChange = () => {
-    const { isAuthenticated } = getAuthStatus();
-    setIsAuthenticated(isAuthenticated);
-  };
+    return (
+        <div className="min-h-screen bg-gray-900 text-white">
+            <header className="bg-gray-800 py-4">
+                <div className="container mx-auto px-4 flex justify-between items-center">
+                    <div className="flex items-center">
+                        <Siren className="h-8 w-8 text-red-500 mr-2"/>
+                        <h1 className="text-2xl font-bold text-yellow-300">South African Disaster Response System</h1>
+                    </div>
+                    <nav>
+                        <ul className="flex space-x-4">
+                            <li><Link href="#features" className="text-yellow-300 hover:text-yellow-100">Features</Link>
+                            </li>
+                            <li><Link href="#how-it-works" className="text-yellow-300 hover:text-yellow-100">How It
+                                Works</Link></li>
 
-  return (
-    <div className="min-h-screen bg-gray-900 text-white">
-      <header className="bg-gray-800 py-4">
-        <div className="container mx-auto px-4 flex justify-between items-center">
-          <div className="flex items-center">
-            <Siren className="h-8 w-8 text-red-500 mr-2" />
-            <h1 className="text-2xl font-bold text-yellow-300">South African Disaster Response System</h1>
-          </div>
-          <nav>
-            <ul className="flex space-x-4">
-              <li><Link href="#features" className="text-yellow-300 hover:text-yellow-100">Features</Link></li>
-              <li><Link href="#how-it-works" className="text-yellow-300 hover:text-yellow-100">How It Works</Link></li>
-              <li><Link href="/dashboard" className="text-yellow-300 hover:text-yellow-100">Dashboard</Link></li>
-            </ul>
-          </nav>
+                            {isAuthenticated ? <li><Link href="/dashboard"
+                                                         className="text-yellow-300 hover:text-yellow-100">Dashboard</Link>
+                            </li> : ""}
+
+                            <li><Link href="/">
+                                {
+                                    isAuthenticated ?
+                                        <Button variant="outline" className="text-yellow-300 border-yellow-300"
+                                                onClick={logout}>
+                                            <LogOut className="h-4 w-4 mr-2"/>
+                                            Exit
+                                        </Button> :
+                                        <Button variant="outline" className="text-yellow-300 border-yellow-300"
+                                                onClick={login}>
+                                            <LogIn className="h-4 w-4 mr-2"/>
+                                            Login
+                                        </Button>
+                                }
+                            </Link></li>
+                        </ul>
+                    </nav>
+                </div>
+            </header>
+
+            <main className="container mx-auto px-4 py-8">
+                <section className="text-center mb-12">
+                    <h2 className="text-4xl font-bold text-yellow-300 mb-4">AI-Powered Emergency Management for South
+                        Africa</h2>
+                    <p className="text-xl text-gray-300 mb-8">Stay informed, prepared, and safe with real-time disaster
+                        monitoring and alerts.</p>
+                    {/*{isAuthenicated ? (*/}
+                    {/*    <Link href="/dashboard">*/}
+                    {/*        <Button size="lg" className="bg-red-600 hover:bg-red-700 text-white">*/}
+                    {/*            Access Dashboard*/}
+                    {/*        </Button>*/}
+                    {/*    </Link>*/}
+                    {/*) : (*/}
+                    {/*    <p className="text-red-500">Please log in to access the dashboard.</p>*/}
+                    {/*)}*/}
+                </section>
+
+                <section id="features" className="mb-12">
+                    <h2 className="text-3xl font-bold text-yellow-300 mb-6">Key Features</h2>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {[
+                            {
+                                title: "Real-time Alerts",
+                                icon: <AlertTriangle className="h-6 w-6"/>,
+                                description: "Receive instant notifications about emerging threats and disasters in your area."
+                            },
+                            {
+                                title: "AI Analysis",
+                                icon: <Info className="h-6 w-6"/>,
+                                description: "Our advanced AI analyzes data from multiple sources to predict and assess potential disasters."
+                            },
+                            {
+                                title: "Interactive Map",
+                                icon: <MapPin className="h-6 w-6"/>,
+                                description: "Visualize current alerts and threat levels across different regions of South Africa."
+                            },
+                            {
+                                title: "Weather Integration",
+                                icon: <CloudRain className="h-6 w-6"/>,
+                                description: "Access up-to-date weather forecasts to anticipate potential weather-related disasters."
+                            },
+                            {
+                                title: "Resource Center",
+                                icon: <Book className="h-6 w-6"/>,
+                                description: "Find comprehensive guides on disaster preparedness, evacuation plans, and emergency kits."
+                            },
+                            {
+                                title: "Historical Data",
+                                icon: <Thermometer className="h-6 w-6"/>,
+                                description: "Access and analyze past disaster data for better long-term planning and preparedness."
+                            },
+                        ].map((feature, index) => (
+                            <Card key={index} className="bg-gray-800 border-gray-700">
+                                <CardHeader>
+                                    <CardTitle className="flex items-center text-yellow-300">
+                                        {feature.icon}
+                                        <span className="ml-2">{feature.title}</span>
+                                    </CardTitle>
+                                </CardHeader>
+                                <CardContent>
+                                    <p className="text-gray-300">{feature.description}</p>
+                                </CardContent>
+                            </Card>
+                        ))}
+                    </div>
+                </section>
+
+                <section id="disasters" className="mb-12">
+                    <h2 className="text-3xl font-bold text-yellow-300 mb-6">Disasters We Monitor</h2>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        {[
+                            {type: "Floods", icon: <CloudRain className="h-8 w-8"/>},
+                            {type: "Droughts", icon: <Thermometer className="h-8 w-8"/>},
+                            {type: "Wildfires", icon: <Flame className="h-8 w-8"/>},
+                            {type: "Severe Storms", icon: <Wind className="h-8 w-8"/>},
+                        ].map((disaster, index) => (
+                            <Card key={index} className="bg-gray-800 border-gray-700">
+                                <CardContent className="flex flex-col items-center justify-center p-4">
+                                    {disaster.icon}
+                                    <h3 className="mt-2 text-lg font-semibold text-yellow-300">{disaster.type}</h3>
+                                </CardContent>
+                            </Card>
+                        ))}
+                    </div>
+                </section>
+
+                {/*<section id="sign-up" className="mb-12">*/}
+                {/*    <SignUpForm onAuthChange={handleAuthChange}/>*/}
+                {/*</section>*/}
+            </main>
+
+            <footer className="bg-gray-800 py-8">
+                <div className="container mx-auto px-4">
+                    <div className="flex flex-col md:flex-row justify-between items-center">
+                        <div className="mb-4 md:mb-0">
+                            <h2 className="text-2xl font-bold text-yellow-300 mb-2">South African Disaster Response
+                                System</h2>
+                            <p className="text-gray-400">Keeping South Africa safe and prepared</p>
+                        </div>
+                        <div className="flex space-x-4">
+                            <Link href="#" className="text-yellow-300 hover:text-yellow-100">Privacy Policy</Link>
+                            <Link href="#" className="text-yellow-300 hover:text-yellow-100">Terms of Service</Link>
+                            <Link href="#" className="text-yellow-300 hover:text-yellow-100">Contact Us</Link>
+                        </div>
+                    </div>
+                </div>
+            </footer>
         </div>
-      </header>
-
-      <main className="container mx-auto px-4 py-8">
-        <section className="text-center mb-12">
-          <h2 className="text-4xl font-bold text-yellow-300 mb-4">AI-Powered Emergency Management for South Africa</h2>
-          <p className="text-xl text-gray-300 mb-8">Stay informed, prepared, and safe with real-time disaster monitoring and alerts.</p>
-          {isAuthenicated ? (
-            <Link href="/dashboard">
-              <Button size="lg" className="bg-red-600 hover:bg-red-700 text-white">
-                Access Dashboard
-              </Button>
-            </Link>
-          ) : (
-            <p className="text-red-500">Please log in to access the dashboard.</p>
-          )}
-        </section>
-
-        <section id="features" className="mb-12">
-          <h2 className="text-3xl font-bold text-yellow-300 mb-6">Key Features</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {[
-              { title: "Real-time Alerts", icon: <AlertTriangle className="h-6 w-6" />, description: "Receive instant notifications about emerging threats and disasters in your area." },
-              { title: "AI Analysis", icon: <Info className="h-6 w-6" />, description: "Our advanced AI analyzes data from multiple sources to predict and assess potential disasters." },
-              { title: "Interactive Map", icon: <MapPin className="h-6 w-6" />, description: "Visualize current alerts and threat levels across different regions of South Africa." },
-              { title: "Weather Integration", icon: <CloudRain className="h-6 w-6" />, description: "Access up-to-date weather forecasts to anticipate potential weather-related disasters." },
-              { title: "Resource Center", icon: <Book className="h-6 w-6" />, description: "Find comprehensive guides on disaster preparedness, evacuation plans, and emergency kits." },
-              { title: "Historical Data", icon: <Thermometer className="h-6 w-6" />, description: "Access and analyze past disaster data for better long-term planning and preparedness." },
-            ].map((feature, index) => (
-              <Card key={index} className="bg-gray-800 border-gray-700">
-                <CardHeader>
-                  <CardTitle className="flex items-center text-yellow-300">
-                    {feature.icon}
-                    <span className="ml-2">{feature.title}</span>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-gray-300">{feature.description}</p>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </section>
-
-        <section id="disasters" className="mb-12">
-          <h2 className="text-3xl font-bold text-yellow-300 mb-6">Disasters We Monitor</h2>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {[
-              { type: "Floods", icon: <CloudRain className="h-8 w-8" /> },
-              { type: "Droughts", icon: <Thermometer className="h-8 w-8" /> },
-              { type: "Wildfires", icon: <Flame className="h-8 w-8" /> },
-              { type: "Severe Storms", icon: <Wind className="h-8 w-8" /> },
-            ].map((disaster, index) => (
-              <Card key={index} className="bg-gray-800 border-gray-700">
-                <CardContent className="flex flex-col items-center justify-center p-4">
-                  {disaster.icon}
-                  <h3 className="mt-2 text-lg font-semibold text-yellow-300">{disaster.type}</h3>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </section>
-
-        <section id="sign-up" className="mb-12">
-          <SignUpForm onAuthChange={handleAuthChange} />
-        </section>
-      </main>
-
-      <footer className="bg-gray-800 py-8">
-        <div className="container mx-auto px-4">
-          <div className="flex flex-col md:flex-row justify-between items-center">
-            <div className="mb-4 md:mb-0">
-              <h2 className="text-2xl font-bold text-yellow-300 mb-2">South African Disaster Response System</h2>
-              <p className="text-gray-400">Keeping South Africa safe and prepared</p>
-            </div>
-            <div className="flex space-x-4">
-              <Link href="#" className="text-yellow-300 hover:text-yellow-100">Privacy Policy</Link>
-              <Link href="#" className="text-yellow-300 hover:text-yellow-100">Terms of Service</Link>
-              <Link href="#" className="text-yellow-300 hover:text-yellow-100">Contact Us</Link>
-            </div>
-          </div>
-        </div>
-      </footer>
-    </div>
-  )
+    )
 }

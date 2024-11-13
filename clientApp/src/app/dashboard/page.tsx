@@ -8,17 +8,17 @@ import OpenStreetMap from "../../components/dashboard/OpenStreetMap";
 import NewsFeedComponent from '../../components/dashboard/NewsFeedComponent';
 import { 
   AlertTriangle, 
-  BarChart, 
+  BarCßhart,
   CloudRain, 
   Flame, 
   Siren, 
   Thermometer, 
   Wind, 
-  LogOut, 
-  MapPin, 
-  Book, 
-  User, 
-  Clock 
+  LogOut,
+  MapPin,
+  Book,
+  User,
+  Clock
 } from "lucide-react"
 import Link from 'next/link'
 
@@ -63,6 +63,7 @@ export default function DashboardPage() {
     return icons[type] || <AlertTriangle className="h-6 w-6" />
   }
 
+  // @ts-ignore
   return (
     <div className="min-h-screen bg-gray-900 text-white p-4">
       <header className="flex items-center justify-between mb-6">
