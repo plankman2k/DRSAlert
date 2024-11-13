@@ -6,7 +6,7 @@ import { Input } from "../ui/input";
 import { Label } from "../ui/label";
 import { useState } from "react";
 
-export default function AuthForm() {
+export default function AuthForm( { onAuthChange}) {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -33,6 +33,7 @@ export default function AuthForm() {
       localStorage.setItem("jwtToken", data.token);
       localStorage.setItem("jwtTokenExpiration", data.expiration);
       setIsAuthenticated(true);
+      onAuthChange();
       console.log(`${isSignUp ? "Sign up" : "Sign in"} was successful`);
     } else {
       const errorData = await response.json();
@@ -46,6 +47,7 @@ export default function AuthForm() {
     localStorage.removeItem("jwtToken");
     localStorage.removeItem("jwtTokenExpiration");
     setIsAuthenticated(false);
+    onAuthChange();
     console.log("Logged out successfully");
   };
 

@@ -15,24 +15,33 @@ interface NewsFeed {
 const NewsFeedComponent = () => {
   const [newsFeed, setNewsFeed] = useState<NewsFeed[]>([]);
 
-  useEffect(() => {
-    const fetchNewsFeed = async () => {
-      try {
-        const response = await fetch('https://localhost:7155/newsfeeds');
-        const data: NewsFeed[] = await response.json();
+    useEffect(() => {
+        const fetchNewsFeed = async () => {
+            try {
+                const token = localStorage.getItem('jwtToken');
+                if (!token) {
+                    throw new Error('No token found');
+                }
 
-        // Remove duplicates based on the URL
-        const uniqueNewsFeed = Array.from(new Set(data.map(news => news.url)))
-          .map(url => data.find(news => news.url === url)!);
+                const response = await fetch('https://localhost:7155/newsfeeds', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                const data: NewsFeed[] = await response.json();
 
-        setNewsFeed(uniqueNewsFeed);
-      } catch (error) {
-        console.error('Error fetching news feed:', error);
-      }
-    };
+                // Remove duplicates based on the URL
+                const uniqueNewsFeed = Array.from(new Set(data.map(news => news.url)))
+                    .map(url => data.find(news => news.url === url)!);
 
-    fetchNewsFeed();
-  }, []);
+                setNewsFeed(uniqueNewsFeed);
+            } catch (error) {
+                console.error('Error fetching news feed:', error);
+            }
+        };
+
+        fetchNewsFeed();
+    }, []);
 
   return (
       <div className="overflow-x-auto">

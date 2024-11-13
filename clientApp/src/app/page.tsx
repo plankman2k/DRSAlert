@@ -1,3 +1,6 @@
+'use client'
+
+import { useState, useEffect } from 'react';
 import { Button } from "../components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card"
 import { Input } from "../components/ui/input"
@@ -6,8 +9,22 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs"
 import { AlertTriangle, Book, CloudRain, Flame, Info, MapPin, Siren, Thermometer, Wind } from "lucide-react"
 import Link from "next/link"
 import SignUpForm from '../components/landing/SignUpForm'
+import { getAuthStatus } from "../utils/auth"
+import {handleClientScriptLoad} from "next/script";
 
 export default function Home() {
+  const [isAuthenicated, setIsAuthenticated] = useState(false);
+
+  useEffect(() => {
+    const { isAuthenticated } = getAuthStatus();
+    setIsAuthenticated(isAuthenticated);
+  }, []);
+
+  const handleAuthChange = () => {
+    const { isAuthenticated } = getAuthStatus();
+    setIsAuthenticated(isAuthenticated);
+  };
+
   return (
     <div className="min-h-screen bg-gray-900 text-white">
       <header className="bg-gray-800 py-4">
@@ -30,11 +47,15 @@ export default function Home() {
         <section className="text-center mb-12">
           <h2 className="text-4xl font-bold text-yellow-300 mb-4">AI-Powered Emergency Management for South Africa</h2>
           <p className="text-xl text-gray-300 mb-8">Stay informed, prepared, and safe with real-time disaster monitoring and alerts.</p>
-          <Link href="/dashboard">
-            <Button size="lg" className="bg-red-600 hover:bg-red-700 text-white">
-              Access Dashboard
-            </Button>
-          </Link>
+          {isAuthenicated ? (
+            <Link href="/dashboard">
+              <Button size="lg" className="bg-red-600 hover:bg-red-700 text-white">
+                Access Dashboard
+              </Button>
+            </Link>
+          ) : (
+            <p className="text-red-500">Please log in to access the dashboard.</p>
+          )}
         </section>
 
         <section id="features" className="mb-12">
@@ -83,7 +104,7 @@ export default function Home() {
         </section>
 
         <section id="sign-up" className="mb-12">
-          <SignUpForm />
+          <SignUpForm onAuthChange={handleAuthChange} />
         </section>
       </main>
 

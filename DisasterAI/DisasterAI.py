@@ -14,7 +14,7 @@ from sklearn.utils.validation import check_non_negative
 
 def fetch_data():
     # Fetch news from SA
-    news_api_url = 'http://api.mediastack.com/v1/news?access_key=5edb2ff2ee693bcdf2aa4aa1d462927d&country=za&categories=general&keywords=disaster'
+    news_api_url = 'http://api.mediastack.com/v1/news?access_key=5edb2ff2ee693bcdf2aa4aa1d462927d&country=za&categories=general&keywords=weather,disaster'
     response_za = requests.get(news_api_url)
     news_data = response_za.json()
 
@@ -237,7 +237,7 @@ def job():
     send_to_rabbitmq(predictions)
     send_news_to_rabbitmq(news_data)
 
-schedule.every(10).minutes.do(job)
+schedule.every(5).minutes.do(job)
 
 while True:
     schedule.run_pending()
