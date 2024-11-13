@@ -2,6 +2,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using DRSAlert.API.DTOs;
 using DRSAlert.API.Filters;
+using DRSAlert.API.Models;
 using DRSAlert.API.Services;
 using DRSAlert.API.Utilities;
 using Microsoft.AspNetCore.Http.HttpResults;
@@ -32,12 +33,14 @@ public static class UsersEndpoint
 
     static async Task<Results<Ok<AuthenticationResponseDTO>,
         BadRequest<IEnumerable<IdentityError>>>> Register(UserCredentialsDTO userCredentialsDTO,
-        [FromServices] UserManager<IdentityUser> userManager, IConfiguration configuration)
+        [FromServices] UserManager<ApplicationUser> userManager, IConfiguration configuration)
     {
-        var user = new IdentityUser
+        var user = new ApplicationUser
         {
             UserName = userCredentialsDTO.Email,
-            Email = userCredentialsDTO.Email
+            Email = userCredentialsDTO.Email,
+            Location = userCredentialsDTO.Location,
+            Name = userCredentialsDTO.Name
         };
 
         var result = await userManager.CreateAsync(user, userCredentialsDTO.Password);
@@ -56,8 +59,8 @@ public static class UsersEndpoint
     
     static async Task<Results<Ok<AuthenticationResponseDTO>, BadRequest<string>>> Login(
         UserCredentialsDTO userCredentialsDTO, 
-        [FromServices] SignInManager<IdentityUser> signInManager,
-        [FromServices] UserManager<IdentityUser> userManager,
+        [FromServices] SignInManager<ApplicationUser> signInManager,
+        [FromServices] UserManager<ApplicationUser> userManager,
         IConfiguration configuration)
     {
         var user = await userManager.FindByEmailAsync(userCredentialsDTO.Email);
@@ -83,7 +86,7 @@ public static class UsersEndpoint
     }
     
     static async Task<Results<NoContent, NotFound>> MakeAdmin(EditClaimDTO editClaimDTO,
-        [FromServices] UserManager<IdentityUser> userManager)
+        [FromServices] UserManager<ApplicationUser> userManager)
     {
         var user = await userManager.FindByEmailAsync(editClaimDTO.Email);
 
@@ -97,7 +100,7 @@ public static class UsersEndpoint
     }
     
     static async Task<Results<NoContent, NotFound>> RemoveAdmin(EditClaimDTO editClaimDTO,
-        [FromServices] UserManager<IdentityUser> userManager)
+        [FromServices] UserManager<ApplicationUser> userManager)
     {
         var user = await userManager.FindByEmailAsync(editClaimDTO.Email);
 
@@ -112,7 +115,7 @@ public static class UsersEndpoint
 
     private static async Task<Results<NotFound, Ok<AuthenticationResponseDTO>>> Renew(
         IUsersService usersService, IConfiguration configuration,
-        [FromServices] UserManager<IdentityUser> userManager)
+        [FromServices] UserManager<ApplicationUser> userManager)
     {
         var user = await usersService.GetUser();
 
@@ -127,7 +130,7 @@ public static class UsersEndpoint
     }
 
     private async static Task<AuthenticationResponseDTO> BuildToken(UserCredentialsDTO userCredentialsDTO,
-        IConfiguration configuration, UserManager<IdentityUser> userManager)
+        IConfiguration configuration, UserManager<ApplicationUser> userManager)
     {
         var claims = new List<Claim>
         {

@@ -12,5 +12,6 @@ public class UserCredentialsDTOValidator : AbstractValidator<UserCredentialsDTO>
             .EmailAddress().WithMessage("Email is not valid");
 
         RuleFor(x => x.Password).NotEmpty().WithMessage("Password cannot be empty");
+        
     }
 }

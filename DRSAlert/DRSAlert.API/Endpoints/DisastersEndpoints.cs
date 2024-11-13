@@ -10,8 +10,9 @@ public static class DisastersEndpoints
     public static RouteGroupBuilder MapDisasters(this RouteGroupBuilder group)
     {
         group.MapGet("/", GetDisasters)
-            .CacheOutput(c => c.Expire(TimeSpan.FromMinutes(5)).Tag("disasters-get"));
-        group.MapGet("/{id:int}", GetById);
+            .CacheOutput(c => c.Expire(TimeSpan.FromMinutes(5)).Tag("disasters-get"))
+            .RequireAuthorization();
+        group.MapGet("/{id:int}", GetById).RequireAuthorization();
         return group;
     }
 

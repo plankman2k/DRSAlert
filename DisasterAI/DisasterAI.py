@@ -9,10 +9,12 @@ import schedule
 import time
 from datetime import datetime, timedelta
 from meteostat import Stations, Daily
+from sklearn.utils.validation import check_non_negative
+
 
 def fetch_data():
     # Fetch news from SA
-    news_api_url = 'http://api.mediastack.com/v1/news?access_key=5edb2ff2ee693bcdf2aa4aa1d462927d&country=za&categories=general&keywords=disaster'
+    news_api_url = 'http://api.mediastack.com/v1/news?access_key=5edb2ff2ee693bcdf2aa4aa1d462927d&country=za&categories=general&keywords=weather,disaster'
     response_za = requests.get(news_api_url)
     news_data = response_za.json()
 
@@ -103,12 +105,12 @@ def fetch_data():
         city in cities)]
 
     # Set the time period
-    #current_date = datetime.now().date()
-    #start = datetime.combine(current_date - timedelta(days=5), datetime.min.time())
-    #end = datetime.combine(current_date + timedelta(days=5), datetime.min.time())
+    current_date = datetime.now().date()
+    start = datetime.combine(current_date - timedelta(days=5), datetime.min.time())
+    end = datetime.combine(current_date + timedelta(days=5), datetime.min.time())
 
-    start = datetime(2024, 1, 1)
-    end = datetime(2024, 12, 31)
+    #start = datetime(2024, 1, 1)
+    #end = datetime(2024, 12, 31)
 
     # Create an empty DataFrame to store the data
     all_weather_data = pd.DataFrame()
@@ -135,7 +137,7 @@ def fetch_data():
     data = pd.DataFrame(filtered_articles)  # + twitter_data['data'])
     data = pd.concat([data, all_weather_data], ignore_index=True)
 
-    return data, cities
+    return data, cities, news_data
 
 def is_disaster(row):
     if row['temp'] > 25:   #40
@@ -215,13 +217,27 @@ def send_to_rabbitmq(predictions):
 
     connection.close()
 
+def send_news_to_rabbitmq(news_data):
+    credentials = pika.PlainCredentials('queue_user', 'queue_password')
+    connection = pika.BlockingConnection(pika.ConnectionParameters('102.211.204.21', credentials=credentials))
+    channel = connection.channel()
+    channel.queue_declare(queue='news')
+
+    for article in news_data['data']:
+        message=json.dumps(article)
+        channel.basic_publish(exchange='', routing_key='news', body=message)
+
+    connection.close()
+
+
 def job():
-    data, cities = fetch_data()
+    data, cities, news_data = fetch_data()
     predictions = analyze_data(data, cities)
     #print(f'Predictions: {predictions}')  # Debug print
     send_to_rabbitmq(predictions)
+    send_news_to_rabbitmq(news_data)
 
-schedule.every(2).minutes.do(job)
+schedule.every(5).minutes.do(job)
 
 while True:
     schedule.run_pending()

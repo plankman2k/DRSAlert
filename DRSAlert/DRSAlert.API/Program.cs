@@ -12,20 +12,20 @@ using Serilog;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using System.Text;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore.Metadata.Internal;
+using System.Text.Json;
+using DRSAlert.API.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddDbContext<ApplicationDBContext>(options =>
     options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-builder.Services.AddIdentityCore<IdentityUser>()
+builder.Services.AddIdentityCore<ApplicationUser>()
     .AddEntityFrameworkStores<ApplicationDBContext>()
     .AddDefaultTokenProviders();
 
-builder.Services.AddScoped<UserManager<IdentityUser>>();
-builder.Services.AddScoped<SignInManager<IdentityUser>>();
+builder.Services.AddScoped<UserManager<ApplicationUser>>();
+builder.Services.AddScoped<SignInManager<ApplicationUser>>();
 
 builder.Services.AddCors(options =>
 {
@@ -41,6 +41,8 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.AddHttpClient();
 
 builder.Services.AddTransient<IUsersService, UsersService>();
+builder.Services.AddScoped<IDisasterRepository, DisasterRepository>();
+builder.Services.AddScoped<INewsFeedRepository, NewsFeedRepository>();
 
 builder.Services.AddAutoMapper(typeof(Program));
 
@@ -91,8 +93,6 @@ builder.Services.AddSwaggerGen(options =>
     });
 });
 
-builder.Services.AddScoped<IDisasterRepository, DisasterRepository>();
-
 builder.Services.AddAuthentication().AddJwtBearer(options => 
     options.TokenValidationParameters = new TokenValidationParameters
     {
@@ -135,31 +135,105 @@ app.MapGet("/", () => "Hello World!").RequireAuthorization();
 
 app.MapGroup("/users").MapUsers();
 app.MapGroup("/disasters").MapDisasters();
+app.MapGroup("/newsfeeds").MapNewsFeeds();
 
 // RabbitMQ Configuration
 var factory = new ConnectionFactory { HostName = "102.211.204.21", UserName = "queue_user", Password = "queue_password" };
-using var connection = await factory.CreateConnectionAsync();
-using var channel = await connection.CreateChannelAsync();
+using var connection1 = await factory.CreateConnectionAsync();
+using var channel1 = await connection1.CreateChannelAsync();
 
-await channel.QueueDeclareAsync(queue: "weather_disaster",
+await channel1.QueueDeclareAsync(queue: "weather_disaster",
     durable: false,
     exclusive: false,
     autoDelete: false,
     arguments: null);
 
-var consumer = new AsyncEventingBasicConsumer(channel);
-consumer.ReceivedAsync += (model, ea) =>
+var consumer1 = new AsyncEventingBasicConsumer(channel1);
+consumer1.ReceivedAsync += async (model, ea) =>
 {
     var body = ea.Body.ToArray();
     var message = Encoding.UTF8.GetString(body);
 
     // Handle message here - Insert to DB, use DisastersRepository.
+    var disaster = JsonSerializer.Deserialize<Disaster>(message);
 
-    return Task.CompletedTask;
+    if (disaster is not null)
+    {
+        Log.Information("Storing disaster info: {Disaster}", disaster.city);
+        using (var scope = app.Services.CreateScope())
+        {
+            // create a new instace if DisasterRepository
+            var disasterRepository = scope.ServiceProvider.GetRequiredService<IDisasterRepository>();
+        
+            var disasterToInsert = new DRSAlert.API.Entities.Disaster
+            {
+                City = disaster.city,
+                Latitude = disaster.latitude,
+                Longitude = disaster.longitude,
+                DisasterType = disaster.disaster_field,
+                DisasterValue = disaster.disaster_value
+            };
+        
+            // Insert the disasterToInser object to the database
+            await disasterRepository.Create(disasterToInsert);
+        }
+        
+    }
 };
 
-await channel.BasicConsumeAsync(queue: "weather_disaster",
+await channel1.BasicConsumeAsync(queue: "weather_disaster",
     autoAck: true,
-    consumer: consumer);
+    consumer: consumer1);
+
+using var connection2 = await factory.CreateConnectionAsync();
+using var channel2 = await connection2.CreateChannelAsync();
+
+await channel2.QueueDeclareAsync(queue: "news",
+    durable: false,
+    exclusive: false,
+    autoDelete: false,
+    arguments: null);
+
+var consumer2 = new AsyncEventingBasicConsumer(channel2);
+consumer2.ReceivedAsync += async (model, ea) =>
+{
+    var body = ea.Body.ToArray();
+    var message = Encoding.UTF8.GetString(body);
+
+    // Deserialize message to a NewsFeed object
+    var newsFeed = JsonSerializer.Deserialize<NewsFeed>(message);
+
+    if (newsFeed is not null)
+    {
+        using (var scope = app.Services.CreateScope())
+        {
+            Log.Information("Storing article info: {NewsFeed}", newsFeed.title);
+            
+            // create a new instance of NewsFeedRepository
+            var newsFeedRepository = scope.ServiceProvider.GetRequiredService<INewsFeedRepository>();
+
+            var newsFeedToInsert = new DRSAlert.API.Entities.NewsFeed
+            {
+                Author = newsFeed.author,
+                Title = newsFeed.title,
+                Description = newsFeed.description,
+                Url = newsFeed.url,
+                Source = newsFeed.source,
+                Image = newsFeed.image?.ToString(),
+                Category = newsFeed.category,
+                Language = newsFeed.language,
+                Country = newsFeed.country,
+                PublishedAt = Convert.ToDateTime(newsFeed.published_at)
+            };
+
+            // Insert the newsFeedToInsert object to the database
+            await newsFeedRepository.Create(newsFeedToInsert);
+        }
+    }
+};
+
+await channel2.BasicConsumeAsync(queue: "news",
+    autoAck: true,
+    consumer: consumer2);
 
 await app.RunAsync();
