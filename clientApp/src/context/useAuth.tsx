@@ -1,18 +1,17 @@
 // src/hooks/useAuth.ts
-import { useRouter } from 'next/router';
 import React, { useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 
 const withAuth = (WrappedComponent: React.ComponentType) => {
     return ({props}: { props: any }) => {
         const { isAuthenticated } = useAuth();
-        const router = useRouter();
 
         useEffect(() => {
             if (!isAuthenticated) {
-                router.push('/user').then(() => {});
+                window.location.reload();
+                window.location.href = '/user';
             }
-        }, [isAuthenticated, router]);
+        }, [isAuthenticated]);
 
         if (!isAuthenticated) {
             return null; // Render nothing while redirecting

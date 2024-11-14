@@ -19,6 +19,7 @@ const OpenStreetMap = () => {
     const southAfricaCoordinates: [number, number] = [-30.5595, 22.9375];
     const mapRef = useRef<L.Map | null>(null);
 
+
     useEffect(() => {
         // Fix marker icons
         delete (L.Icon.Default.prototype as unknown as { _getIconUrl?: () => void })._getIconUrl;
@@ -59,16 +60,17 @@ const OpenStreetMap = () => {
         }
     }, []);
 
-    if (typeof window === 'undefined') return null;
+    if (typeof window === 'undefined') {
+    }
 
     function getWhenReady() {
         return (mapInstance: L.Map) => {
+
             if (!mapRef.current) {
                 mapRef.current = mapInstance;
             }
         };
     }
-
 
 
     return (
