@@ -1,3 +1,4 @@
+// src/context/AuthContext.tsx
 "use client"
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { getAuthStatus, login, logout } from '../utils/auth';
@@ -11,7 +12,7 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-    const [isAuthenticated, setIsAuthenticated] = useState(false);
+    const [, setIsAuthenticated] = useState(false);
 
     useEffect(() => {
         const { isAuthenticated } = getAuthStatus();
@@ -27,6 +28,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         logout();
         setIsAuthenticated(false);
     };
+
+    const isAuthenticated = getAuthStatus().isAuthenticated;
 
     return (
         <AuthContext.Provider value={{ isAuthenticated, handleLogin, handleLogout }}>

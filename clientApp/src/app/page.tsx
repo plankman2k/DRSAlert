@@ -51,7 +51,7 @@ export default function Home() {
                                         <Button variant="outline" className="text-yellow-300 border-yellow-300"
                                                 onClick={logout}>
                                             <LogOut className="h-4 w-4 mr-2"/>
-                                            Exit
+                                            Logout
                                         </Button> :
                                         <Button variant="outline" className="text-yellow-300 border-yellow-300">
                                             <Link href="/user">

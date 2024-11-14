@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Button } from "../../components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../components/ui/tabs"
@@ -8,7 +8,6 @@ import OpenStreetMap from "../../components/dashboard/OpenStreetMap";
 import NewsFeedComponent from '../../components/dashboard/NewsFeedComponent';
 import {
   AlertTriangle,
-  BarChart,
   CloudRain,
   Flame,
   Siren,
@@ -17,6 +16,8 @@ import {
   LogOut
 } from "lucide-react"
 import Link from 'next/link'
+import { useAuth } from '../../context/AuthContext'
+import withAuth from "../../context/useAuth";
 
 interface Alert {
   type: string;
@@ -25,7 +26,8 @@ interface Alert {
   time: string;
 }
 
-export default function DashboardPage() {
+const DashboardPage = ()=>{
+
   const [alerts, setAlerts] = useState<Alert[]>([])
   const [currentDisaster, setCurrentDisaster] = useState<Alert | null>(null)
   const [weatherForecast, setWeatherForecast] = useState({
@@ -65,6 +67,7 @@ export default function DashboardPage() {
     }
     return icons[type] || <AlertTriangle className="h-6 w-6" />
   }
+
 
   return (
       <div className="min-h-screen bg-gray-900 text-white p-4">
@@ -172,3 +175,5 @@ export default function DashboardPage() {
       </div>
   )
 }
+
+export default withAuth(DashboardPage);
