@@ -61,17 +61,23 @@ const OpenStreetMap = () => {
 
     if (typeof window === 'undefined') return null;
 
+    function getWhenReady() {
+        return (mapInstance: L.Map) => {
+            if (!mapRef.current) {
+                mapRef.current = mapInstance;
+            }
+        };
+    }
+
+
+
     return (
         <div className="h-[600px] w-full relative">
             <MapContainer
                 center={southAfricaCoordinates}
                 zoom={6}
                 className="h-full w-full absolute"
-                whenReady={(mapInstance: L.Map) => {
-                    if (!mapRef.current) {
-                        mapRef.current = mapInstance;
-                    }
-                }}
+                whenReady={getWhenReady()}
             >
                 <TileLayer
                     url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
