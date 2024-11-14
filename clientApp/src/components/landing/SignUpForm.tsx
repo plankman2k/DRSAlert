@@ -5,14 +5,15 @@ import { Card, CardContent } from "../ui/card";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
 import { useState } from "react";
+import {ErrorModal} from "../ui/Modals/ErrorModal";
+import {login} from "../../utils/auth";
 
-export default function AuthForm( { onAuthChange}) {
+export default function AuthForm( ) {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [location, setLocation] = useState("");
   const [errorMessages, setErrorMessages] = useState<string[]>([]);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isSignUp, setIsSignUp] = useState(true);
 
   const handleSubmit = async (event: React.FormEvent) => {
@@ -30,36 +31,21 @@ export default function AuthForm( { onAuthChange}) {
 
     if (response.ok) {
       const data = await response.json();
-      localStorage.setItem("jwtToken", data.token);
-      localStorage.setItem("jwtTokenExpiration", data.expiration);
-      setIsAuthenticated(true);
-      onAuthChange();
+      login(data.token, data.expiration);
       console.log(`${isSignUp ? "Sign up" : "Sign in"} was successful`);
     } else {
       const errorData = await response.json();
-      const errors = Object.values(errorData.errors).flat();
+      const errors = Object.values(errorData.errors).flat() as string[];
       setErrorMessages(errors);
       console.log(`${isSignUp ? "Sign up" : "Sign in"} failed`);
     }
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem("jwtToken");
-    localStorage.removeItem("jwtTokenExpiration");
-    setIsAuthenticated(false);
-    onAuthChange();
-    console.log("Logged out successfully");
-  };
-
   return (
       <section id="auth-section" className="mb-12">
-        {isAuthenticated ? (
-            <Button onClick={handleLogout} className="w-full bg-red-600 hover:bg-red-700 text-white">
-              Logout
-            </Button>
-        ) : (
-            <>
+
               <h2 className="text-3xl font-bold text-yellow-300 mb-6">{isSignUp ? "Sign Up" : "Sign In"}</h2>
+              <ErrorModal isOpen={errorMessages.length > 0} onClose={() => setErrorMessages([])} errorMessages={errorMessages}/>
               <Card className="bg-gray-800 border-yellow-300">
                 <CardContent className="pt-6">
                   <form className="space-y-4" onSubmit={handleSubmit}>
@@ -125,8 +111,6 @@ export default function AuthForm( { onAuthChange}) {
                   </Button>
                 </CardContent>
               </Card>
-            </>
-        )}
       </section>
   );
 }

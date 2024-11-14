@@ -1,12 +1,11 @@
-// src/context/AuthContext.tsx
 "use client"
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { getAuthStatus, login, logout } from '../utils/auth';
 
 interface AuthContextType {
     isAuthenticated: boolean;
-    login: () => void;
-    logout: () => void;
+    handleLogin: (token: string, expiryDate: string) => void;
+    handleLogout: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -19,8 +18,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setIsAuthenticated(isAuthenticated);
     }, []);
 
-    const handleLogin = () => {
-        login("","");
+    const handleLogin = (token: string, expiryDate: string) => {
+        login(token, expiryDate);
         setIsAuthenticated(true);
     };
 
@@ -30,7 +29,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
 
     return (
-        <AuthContext.Provider value={{ isAuthenticated, login: handleLogin, logout: handleLogout }}>
+        <AuthContext.Provider value={{ isAuthenticated, handleLogin, handleLogout }}>
             {children}
         </AuthContext.Provider>
     );

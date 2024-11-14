@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -17,10 +17,11 @@ interface DisasterData {
 const OpenStreetMap = () => {
     const [disasterData, setDisasterData] = useState<DisasterData[]>([]);
     const southAfricaCoordinates: [number, number] = [-30.5595, 22.9375];
+    const mapRef = useRef<L.Map | null>(null);
 
     useEffect(() => {
         // Fix marker icons
-        delete (L.Icon.Default.prototype as unknown as { _getIconUrl: () => void })._getIconUrl;
+        delete (L.Icon.Default.prototype as unknown as { _getIconUrl?: () => void })._getIconUrl;
         L.Icon.Default.mergeOptions({
             iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
             iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
@@ -66,14 +67,19 @@ const OpenStreetMap = () => {
                 center={southAfricaCoordinates}
                 zoom={6}
                 className="h-full w-full absolute"
+                whenReady={(mapInstance: L.Map) => {
+                    if (!mapRef.current) {
+                        mapRef.current = mapInstance;
+                    }
+                }}
             >
                 <TileLayer
                     url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                     attribution='&copy; OpenStreetMap contributors'
                 />
-                {disasterData.map((disaster) => (
+                {disasterData.map((disaster, index) => (
                     <Marker
-                        key={disaster.id}
+                        key={`${disaster.id}-${index}`}
                         position={[disaster.latitude, disaster.longitude]}
                     >
                         <Popup>

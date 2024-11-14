@@ -9,7 +9,6 @@ import {
     CloudRain,
     Flame,
     Info,
-    LogIn,
     LogOut,
     MapPin,
     Siren,
@@ -17,12 +16,12 @@ import {
     Wind,
 } from "lucide-react"
 import Link from "next/link"
-import SignUpForm from '../components/landing/SignUpForm'
 import {useAuth} from "../context/AuthContext";
+import {logout} from "../utils/auth";
 
 
 export default function Home() {
-    const {isAuthenticated, login, logout} = useAuth();
+    const {isAuthenticated} = useAuth();
 
 
     return (
@@ -35,13 +34,15 @@ export default function Home() {
                     </div>
                     <nav>
                         <ul className="flex space-x-4">
-                            <li><Link href="#features" className="text-yellow-300 hover:text-yellow-100">Features</Link>
+                            <li><Link href="#features"
+                                      className="text-yellow-300 hover:text-yellow-100 py-6">Features</Link>
                             </li>
-                            <li><Link href="#how-it-works" className="text-yellow-300 hover:text-yellow-100">How It
-                                Works</Link></li>
+                            <li><Link href="#how-it-works" className="text-yellow-300 hover:text-yellow-100 py-6">How It
+                                Works
+                            </Link></li>
 
                             {isAuthenticated ? <li><Link href="/dashboard"
-                                                         className="text-yellow-300 hover:text-yellow-100">Dashboard</Link>
+                                                         className="text-yellow-300 hover:text-yellow-100 py-2">Dashboard</Link>
                             </li> : ""}
 
                             <li><Link href="/">
@@ -52,10 +53,10 @@ export default function Home() {
                                             <LogOut className="h-4 w-4 mr-2"/>
                                             Exit
                                         </Button> :
-                                        <Button variant="outline" className="text-yellow-300 border-yellow-300"
-                                                onClick={login}>
-                                            <LogIn className="h-4 w-4 mr-2"/>
-                                            Login
+                                        <Button variant="outline" className="text-yellow-300 border-yellow-300">
+                                            <Link href="/user">
+                                                Login/Sign Up
+                                            </Link>
                                         </Button>
                                 }
                             </Link></li>
@@ -150,9 +151,7 @@ export default function Home() {
                     </div>
                 </section>
 
-                {/*<section id="sign-up" className="mb-12">*/}
-                {/*    <SignUpForm onAuthChange={handleAuthChange}/>*/}
-                {/*</section>*/}
+
             </main>
 
             <footer className="bg-gray-800 py-8">
