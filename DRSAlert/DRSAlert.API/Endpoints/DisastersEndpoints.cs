@@ -1,6 +1,7 @@
 using AutoMapper;
 using DRSAlert.API.DTOs;
 using DRSAlert.API.Repositories;
+using System.Linq;
 using Microsoft.AspNetCore.Http.HttpResults;
 
 namespace DRSAlert.API.Endpoints;
@@ -13,6 +14,7 @@ public static class DisastersEndpoints
             .CacheOutput(c => c.Expire(TimeSpan.FromMinutes(5)).Tag("disasters-get"))
             .RequireAuthorization();
         group.MapGet("/{id:int}", GetById).RequireAuthorization();
+        group.MapGet("/topdisasters", GetTopDisasters).RequireAuthorization();
         return group;
     }
 
@@ -37,5 +39,15 @@ public static class DisastersEndpoints
         var disasterDTO = mapper.Map<DisasterDTO>(disaster);
 
         return TypedResults.Ok(disasterDTO);
+    }
+    
+    static async Task<Ok<List<DisasterDTO>>> GetTopDisasters(IDisasterRepository repository,
+        IMapper mapper)
+    {
+        var disasters = await repository.GetAll();
+        var disastersDTO = mapper.Map<List<DisasterDTO>>(disasters);
+        var filteredList = disastersDTO.OrderByDescending(x => x.Id)
+            .Take(5).ToList();
+        return TypedResults.Ok(filteredList);
     }
 }

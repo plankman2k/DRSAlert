@@ -10,7 +10,7 @@ const inter = Inter({
 })
 
 export const metadata: Metadata = {
-  title: "South African Disaster Response System",
+  title: "DisasterRescue",
   description: "Real-time disaster monitoring and alerts for South Africa",
   keywords: "disaster response, emergency management, South Africa, alerts",
   authors: [{ name: "Disaster Response Team" }],

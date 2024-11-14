@@ -144,9 +144,9 @@ def is_disaster(row):
         return row['temp'], 'temp'
     elif row['snowfall'] > 10:
         return row['snowfall'], 'snowfall'
-    elif row['wind_speed'] > 50:
+    elif row['wind_speed'] > 15: #50:
         return row['wind_speed'], 'wind_speed'
-    elif row['rainfall'] > 50:
+    elif row['rainfall'] > 15: #50:
         return row['rainfall'], 'rainfall'
     else:
         return 0, None
@@ -237,7 +237,7 @@ def job():
     send_to_rabbitmq(predictions)
     send_news_to_rabbitmq(news_data)
 
-schedule.every(10).minutes.do(job)
+schedule.every(2).minutes.do(job)
 
 while True:
     schedule.run_pending()

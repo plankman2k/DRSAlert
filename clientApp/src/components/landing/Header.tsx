@@ -7,7 +7,7 @@ export default function Header() {
       <div className="container mx-auto px-4 flex justify-between items-center">
         <div className="flex items-center">
           <Siren className="h-8 w-8 text-red-500 mr-2" />
-          <h1 className="text-2xl font-bold text-yellow-300">South African Disaster Response System</h1>
+          <h1 className="text-2xl font-bold text-yellow-300">DisasterRescue</h1>
         </div>
         <nav>
           <ul className="flex space-x-4">

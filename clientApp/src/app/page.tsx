@@ -1,6 +1,5 @@
 'use client'
 
-
 import {Button} from "../components/ui/button"
 import {Card, CardContent, CardHeader, CardTitle} from "../components/ui/card"
 import {
@@ -19,10 +18,8 @@ import Link from "next/link"
 import {useAuth} from "../context/AuthContext";
 import {logout} from "../utils/auth";
 
-
 export default function Home() {
     const {isAuthenticated} = useAuth();
-
 
     return (
         <div className="min-h-screen bg-gray-900 text-white">
@@ -30,36 +27,31 @@ export default function Home() {
                 <div className="container mx-auto px-4 flex justify-between items-center">
                     <div className="flex items-center">
                         <Siren className="h-8 w-8 text-red-500 mr-2"/>
-                        <h1 className="text-2xl font-bold text-yellow-300">South African Disaster Response System</h1>
+                        <h1 className="text-2xl font-bold text-yellow-300">DisasterRescue</h1>
                     </div>
                     <nav>
                         <ul className="flex space-x-4">
-                            <li><Link href="#features"
-                                      className="text-yellow-300 hover:text-yellow-100 py-6">Features</Link>
-                            </li>
-                            <li><Link href="#how-it-works" className="text-yellow-300 hover:text-yellow-100 py-6">How It
-                                Works
-                            </Link></li>
-
-                            {isAuthenticated ? <li><Link href="/dashboard"
-                                                         className="text-yellow-300 hover:text-yellow-100 py-2">Dashboard</Link>
-                            </li> : ""}
-
-                            <li><Link href="/">
-                                {
-                                    isAuthenticated ?
-                                        <Button variant="outline" className="text-yellow-300 border-yellow-300"
-                                                onClick={logout}>
-                                            <LogOut className="h-4 w-4 mr-2"/>
-                                            Logout
-                                        </Button> :
+                            <li><Link href="#features" className="text-yellow-300 hover:text-yellow-100 py-6">Features</Link></li>
+                            <li><Link href="#how-it-works" className="text-yellow-300 hover:text-yellow-100 py-6">How It Works</Link></li>
+                            {isAuthenticated && (
+                                <li>
+                                    <Link href="/dashboard" className="text-yellow-300 hover:text-yellow-100 py-2">Dashboard</Link>
+                                </li>
+                            )}
+                            <li>
+                                {isAuthenticated ? (
+                                    <Button variant="outline" className="text-yellow-300 border-yellow-300" onClick={logout}>
+                                        <LogOut className="h-4 w-4 mr-2"/>
+                                        Logout
+                                    </Button>
+                                ) : (
+                                    <Link href="/user">
                                         <Button variant="outline" className="text-yellow-300 border-yellow-300">
-                                            <Link href="/user">
-                                                Login/Sign Up
-                                            </Link>
+                                            Login/Sign Up
                                         </Button>
-                                }
-                            </Link></li>
+                                    </Link>
+                                )}
+                            </li>
                         </ul>
                     </nav>
                 </div>
@@ -67,19 +59,17 @@ export default function Home() {
 
             <main className="container mx-auto px-4 py-8">
                 <section className="text-center mb-12">
-                    <h2 className="text-4xl font-bold text-yellow-300 mb-4">AI-Powered Emergency Management for South
-                        Africa</h2>
-                    <p className="text-xl text-gray-300 mb-8">Stay informed, prepared, and safe with real-time disaster
-                        monitoring and alerts.</p>
-                    {/*{isAuthenicated ? (*/}
-                    {/*    <Link href="/dashboard">*/}
-                    {/*        <Button size="lg" className="bg-red-600 hover:bg-red-700 text-white">*/}
-                    {/*            Access Dashboard*/}
-                    {/*        </Button>*/}
-                    {/*    </Link>*/}
-                    {/*) : (*/}
-                    {/*    <p className="text-red-500">Please log in to access the dashboard.</p>*/}
-                    {/*)}*/}
+                    <h2 className="text-4xl font-bold text-yellow-300 mb-4">AI-Powered Emergency Management for South Africa</h2>
+                    <p className="text-xl text-gray-300 mb-8">Stay informed, prepared, and safe with real-time disaster monitoring and alerts.</p>
+                    {isAuthenticated ? (
+                        <Link href="/dashboard">
+                            <Button size="lg" className="bg-red-600 hover:bg-red-700 text-white">
+                                Access Dashboard
+                            </Button>
+                        </Link>
+                    ) : (
+                        <p className="text-red-500">Please log in to access the dashboard.</p>
+                    )}
                 </section>
 
                 <section id="features" className="mb-12">
@@ -150,16 +140,13 @@ export default function Home() {
                         ))}
                     </div>
                 </section>
-
-
             </main>
 
             <footer className="bg-gray-800 py-8">
                 <div className="container mx-auto px-4">
                     <div className="flex flex-col md:flex-row justify-between items-center">
                         <div className="mb-4 md:mb-0">
-                            <h2 className="text-2xl font-bold text-yellow-300 mb-2">South African Disaster Response
-                                System</h2>
+                            <h2 className="text-2xl font-bold text-yellow-300 mb-2">South African Disaster Response System</h2>
                             <p className="text-gray-400">Keeping South Africa safe and prepared</p>
                         </div>
                         <div className="flex space-x-4">

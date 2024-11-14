@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/ca
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../components/ui/tabs"
 import OpenStreetMap from "../../components/dashboard/OpenStreetMap";
 import NewsFeedComponent from '../../components/dashboard/NewsFeedComponent';
+import EmergencyAlertModal from '../../components/dashboard/EmergencyAlertModal';
 import {
   AlertTriangle,
   CloudRain,
@@ -27,6 +28,10 @@ interface Alert {
 }
 
 const DashboardPage = ()=>{
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const openModal = () => setIsModalOpen(true);
+  const closeModal = () => setIsModalOpen(false);
 
   const [alerts, setAlerts] = useState<Alert[]>([])
   const [currentDisaster, setCurrentDisaster] = useState<Alert | null>(null)
@@ -74,10 +79,10 @@ const DashboardPage = ()=>{
         <header className="flex items-center justify-between mb-6">
           <div className="flex items-center">
             <Siren className="h-8 w-8 text-red-500 mr-2" />
-            <h1 className="text-2xl font-bold text-yellow-300">Disaster Response Dashboard</h1>
+            <h1 className="text-2xl font-bold text-yellow-300">DisasterRescue Dashboard</h1>
           </div>
           <div className="flex items-center space-x-4">
-            <Button variant="destructive" className="bg-red-600 hover:bg-red-700">
+            <Button variant="destructive" className="bg-red-600 hover:bg-red-700" onClick={openModal}>
               <AlertTriangle className="h-4 w-4 mr-2" />
               Emergency Alert
             </Button>
@@ -172,6 +177,7 @@ const DashboardPage = ()=>{
         <footer className="mt-8 text-center text-sm text-gray-400">
           <p>Emergency Contacts: Police 10111 | Ambulance 10177 | Fire 998</p>
         </footer>
+        <EmergencyAlertModal isOpen={isModalOpen} onClose={closeModal} />
       </div>
   )
 }
