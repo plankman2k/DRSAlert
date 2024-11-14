@@ -237,7 +237,7 @@ def job():
     send_to_rabbitmq(predictions)
     send_news_to_rabbitmq(news_data)
 
-schedule.every(5).minutes.do(job)
+schedule.every(10).minutes.do(job)
 
 while True:
     schedule.run_pending()
