@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
+using Serilog;
 
 namespace DRSAlert.API.Endpoints;
 
@@ -17,7 +18,7 @@ public static class UsersEndpoint
     public static RouteGroupBuilder MapUsers(this RouteGroupBuilder group)
     {
         group.MapPost("/register", Register).AddEndpointFilter<ValidationFilter<UserCredentialsDTO>>();
-        group.MapPost("/login", Login).AddEndpointFilter<ValidationFilter<UserCredentialsDTO>>();
+        group.MapPost("/login", Login).AddEndpointFilter<ValidationFilter<LoginCredentialsDto>>();
 
         group.MapPost("/makeadmin", MakeAdmin)
             .AddEndpointFilter<ValidationFilter<EditClaimDTO>>()
@@ -48,7 +49,7 @@ public static class UsersEndpoint
         if (result.Succeeded)
         {
             var authenticationResponse = 
-                await BuildToken(userCredentialsDTO, configuration, userManager);
+                await BuildToken(userCredentialsDTO.Email, configuration, userManager);
             return TypedResults.Ok(authenticationResponse);
         }
         else
@@ -58,12 +59,12 @@ public static class UsersEndpoint
     }
     
     static async Task<Results<Ok<AuthenticationResponseDTO>, BadRequest<string>>> Login(
-        UserCredentialsDTO userCredentialsDTO, 
+        LoginCredentialsDto loginCredentialsDto, 
         [FromServices] SignInManager<ApplicationUser> signInManager,
         [FromServices] UserManager<ApplicationUser> userManager,
         IConfiguration configuration)
     {
-        var user = await userManager.FindByEmailAsync(userCredentialsDTO.Email);
+        var user = await userManager.FindByEmailAsync(loginCredentialsDto.Email);
 
         if (user is null)
         {
@@ -71,18 +72,17 @@ public static class UsersEndpoint
         }
 
         var results = await signInManager.CheckPasswordSignInAsync(user,
-            userCredentialsDTO.Password, lockoutOnFailure: false);
+            loginCredentialsDto.Password, lockoutOnFailure: false);
+        Log.Logger.Information("User {Email} logged in with {Results}", loginCredentialsDto.Email, results);
 
         if (results.Succeeded)
         {
             var authenticationResponse = 
-                await BuildToken(userCredentialsDTO, configuration, userManager);
+                await BuildToken(loginCredentialsDto.Email, configuration, userManager);
             return TypedResults.Ok(authenticationResponse);
         }
-        else
-        {
-            return TypedResults.BadRequest("There was a problem with the email or password");
-        }
+
+        return TypedResults.BadRequest("There was a problem with the email or password");
     }
     
     static async Task<Results<NoContent, NotFound>> MakeAdmin(EditClaimDTO editClaimDTO,
@@ -125,19 +125,19 @@ public static class UsersEndpoint
         }
 
         var usersCredential = new UserCredentialsDTO { Email = user.Email! };
-        var response = await BuildToken(usersCredential, configuration, userManager);
+        var response = await BuildToken(usersCredential.Email, configuration, userManager);
         return TypedResults.Ok(response);
     }
 
-    private async static Task<AuthenticationResponseDTO> BuildToken(UserCredentialsDTO userCredentialsDTO,
+    private async static Task<AuthenticationResponseDTO> BuildToken(String email,
         IConfiguration configuration, UserManager<ApplicationUser> userManager)
     {
         var claims = new List<Claim>
         {
-            new Claim("email", userCredentialsDTO.Email),
+            new Claim("email", email),
         };
 
-        var user = await userManager.FindByNameAsync(userCredentialsDTO.Email);
+        var user = await userManager.FindByNameAsync(email);
         var claimsFromDB = await userManager.GetClaimsAsync(user!);
         
         claims.AddRange(claimsFromDB);
