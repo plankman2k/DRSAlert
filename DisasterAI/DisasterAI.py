@@ -206,7 +206,7 @@ def analyze_data(data, cities):
 
 def send_to_rabbitmq(predictions):
     credentials = pika.PlainCredentials('queue_user', 'queue_password')
-    connection = pika.BlockingConnection(pika.ConnectionParameters('102.211.204.21', credentials=credentials))
+    connection = pika.BlockingConnection(pika.ConnectionParameters('localhost', credentials=credentials))
     channel = connection.channel()
     channel.queue_declare(queue='weather_disaster')
 
